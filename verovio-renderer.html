@@ -4,15 +4,44 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Verovio Renderer Demo</title>
-  <script src="https://www.verovio.org/javascript/latest/verovio-toolkit-wasm.js"></script>
-  <script src="verovio-renderer-component.js"></script>
+  <script src="verovio-renderer-component2.js"></script>
+  <script src="verovio-audio-rendred.js"></script>
+  <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+  <link href="verovio-css.css" rel="stylesheet" type="text/css" />
+
+  <!-- A JavaScript MIDI player -->
 </head>
 <body>
   <h1>Verovio Renderer Demo</h1>
 
-  <verovio-api-renderer style="width: 100%; height: 100%; background-color: red;">
-    <!-- SVG content will be rendered here -->
-  </verovio-api-renderer>
+  <!-- <verovio-api-renderer style="width: 100%; height: 100%; background-color: red;">
+  </verovio-api-renderer>  -->
+
+   <verovio-player>
+    <style>
+
+@keyframes pulse {
+    0% {
+        fill: orange;
+    }
+    50% {
+        fill: brown;
+    }
+    100% {
+        fill: orange;
+    }
+}
+
+g.note.playing {
+    animation-name: pulse;
+    animation-duration: 1.0s; 
+    animation-iteration-count: infinite;
+}
+
+    </style>
+
+   </verovio-player>
+    
 
 </body>
 </html>
