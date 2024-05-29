@@ -3,19 +3,21 @@ class VerovioPlayer extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
     }
+    static get observedAttributes() {
+        return ['mei-url', 'pagewidth', 'pageheight'];
+    }
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'mei-url') {
+            this.meiUrl = newValue;
+            this.renderPlayer();
+        }
+        // Add handling for 'pagewidth' and 'pageheight' attributes here
+    }
 
     connectedCallback() {
         this.renderPlayer();
     }
 
-    static get observedAttributes() {
-        return ['pagewidth', 'pageheight',];
-      }
-// attribute change
-  attributeChangedCallback(property, oldValue, newValue) {
-    // handle property change
-    //this.set(property, newValue);
-  }
 
     renderPlayer() {
 
@@ -109,14 +111,22 @@ class VerovioPlayer extends HTMLElement {
     }
 
     async initPlayer(tk, MIDIjs) {
-        console.log('Initializing player...');
-        tk.setOptions({
-            pageWidth: 1000 ,
-            pageHeight: 2000,    
-            scaleToPageSize: true,
-            landscape: true,
-        });
+        try {
+            const response = await fetch(this.meiUrl);
+            const meiXML = await response.text();
+            tk.loadData(meiXML);
+            let svg = tk.renderToSVG(1);
+            this.shadowRoot.getElementById("notation").innerHTML = svg;
 
+            tk.setOptions({
+                pageWidth: 1000 ,
+                pageHeight: 2000,    
+                scaleToPageSize: true,
+                landscape: true,
+            });
+        } catch (error) {
+            console.error('Error initializing player:', error);
+        }
         let currentPage = 1;
 
   
@@ -194,7 +204,7 @@ class VerovioPlayer extends HTMLElement {
 
 
         try {
-            const response = await fetch("https://www.verovio.org/examples/downloads/Schubert_Lindenbaum.mei");
+            const response = await fetch(this.meiUrl);
             const meiXML = await response.text();
             tk.loadData(meiXML);
             let svg = tk.renderToSVG(1);

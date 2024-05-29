@@ -3,11 +3,24 @@ class VerovioAPIRenderer extends HTMLElement {
       super();
       this.attachShadow({ mode: 'open' });
   }
+  static get observedAttributes() {
+    return ['mei-url'];
+}
 
   connectedCallback() {
       this.renderVerovio();
   }
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+}
 
+attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'mei-url') {
+        this.meiUrl = newValue;
+        this.renderPlayer();
+    }
+}
   renderVerovio() {
       const verovioScript = document.createElement('script');
       verovioScript.src = "https://www.verovio.org/javascript/latest/verovio-toolkit-wasm.js";
