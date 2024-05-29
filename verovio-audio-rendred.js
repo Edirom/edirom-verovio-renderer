@@ -8,6 +8,15 @@ class VerovioPlayer extends HTMLElement {
         this.renderPlayer();
     }
 
+    static get observedAttributes() {
+        return ['pagewidth', 'pageheight',];
+      }
+// attribute change
+  attributeChangedCallback(property, oldValue, newValue) {
+    // handle property change
+    //this.set(property, newValue);
+  }
+
     renderPlayer() {
 
 
@@ -60,10 +69,18 @@ class VerovioPlayer extends HTMLElement {
         this.shadowRoot.appendChild(stopButton);
 
         // Create and append the stop button
-        const dwnButton = document.createElement('button');
-        dwnButton.textContent = 'PDF';
-        dwnButton.id = 'downloadPdf';
-        this.shadowRoot.appendChild(dwnButton);
+        const nextButton = document.createElement('button');
+        nextButton.textContent = 'next';
+        nextButton.id = 'next';
+        this.shadowRoot.appendChild(nextButton);
+
+        // Create and append the stop button
+        const previousButton = document.createElement('button');
+        previousButton.textContent = 'previous';
+        previousButton.id = 'previous';
+        this.shadowRoot.appendChild(previousButton);
+
+
 
         // Create and append the notation div
         const notationDiv = document.createElement('div');
@@ -94,8 +111,8 @@ class VerovioPlayer extends HTMLElement {
     async initPlayer(tk, MIDIjs) {
         console.log('Initializing player...');
         tk.setOptions({
-            pageWidth: document.body.clientWidth,
-            pageHeight: 1000,
+            pageWidth: 1000 ,
+            pageHeight: 2000,    
             scaleToPageSize: true,
             landscape: true,
         });
@@ -107,6 +124,7 @@ class VerovioPlayer extends HTMLElement {
         const playMIDIHandler = () => {
             let base64midi = tk.renderToMIDI();
             let midiString = 'data:audio/midi;base64,' + base64midi;
+            console.log("this is midi play ", MIDIjs)
             MIDIjs.play(midiString);
 
 
@@ -125,11 +143,21 @@ class VerovioPlayer extends HTMLElement {
             }
         };
 
-        const downloadHandler = () => {
-
-
+        const nextPageHandler = () => {
+            if(currentPage < tk.getPageCount()){
+                currentPage++ 
+                this.shadowRoot.getElementById("notation").innerHTML = tk.renderToSVG(currentPage);
+            }
         };
         
+
+        const previousPageHandler = () => {
+            if(currentPage != 1){
+                currentPage--
+                this.shadowRoot.getElementById("notation").innerHTML = tk.renderToSVG(currentPage);
+            }
+
+        };
 
         const midiHightlightingHandler = function (event) {
             console.log("number of pages are " ,tk.getPageCount())
@@ -141,12 +169,15 @@ class VerovioPlayer extends HTMLElement {
 
             // Get elements at a time in milliseconds (time from the player is in seconds)
             let currentElements = tk.getElementsAtTime(event.time * 1000);
+            console.log(event)
+
 
             if (currentElements.page == 0) return;
 
             if (currentElements.page != currentPage) {
-                currentPage = currentElements.page;
+                this.currentPage = currentElements.page;
                 this.shadowRoot.getElementById("notation").innerHTML = tk.renderToSVG(currentPage);
+
             }
             // Get all notes playing and set the class
             for (let note of currentElements.notes) {
@@ -157,7 +188,9 @@ class VerovioPlayer extends HTMLElement {
         MIDIjs.player_callback = midiHightlightingHandler;
         this.shadowRoot.getElementById('playMIDI').addEventListener('click', playMIDIHandler);
         this.shadowRoot.getElementById('stopMIDI').addEventListener('click', stopMIDIHandler);
-        this.shadowRoot.getElementById('downloadPdf').addEventListener('click', downloadHandler);
+        this.shadowRoot.getElementById('next').addEventListener('click', nextPageHandler);
+        this.shadowRoot.getElementById('previous').addEventListener('click', previousPageHandler);
+
 
 
         try {
