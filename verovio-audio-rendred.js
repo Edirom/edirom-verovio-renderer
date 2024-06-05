@@ -14,13 +14,23 @@ class VerovioPlayer extends HTMLElement {
 // attribute change
   attributeChangedCallback(property, oldValue, newValue) {
     // handle property change
-    //this.set(property, newValue);
+    if(oldValue !== newValue){
+        this.setAttribute(property, newValue);
+        this.renderPlayer();
+    } else {
+        return;
+    }
   }
 
+
+  elementFromHTML(html) {
+    const template = document.createElement('template');
+            template.innerHTML = html.trim();
+            return template.content.firstChild;
+    }
+
     renderPlayer() {
-
-
-
+        // Load jspdf asynchronously
         const loadPdf = document.createElement('script');
         loadPdf.src = "https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js";
         loadPdf.defer = true;
@@ -111,9 +121,13 @@ class VerovioPlayer extends HTMLElement {
     async initPlayer(tk, MIDIjs) {
         console.log('Initializing player...');
         tk.setOptions({
-            pageWidth: 1000 ,
-            pageHeight: 2000,    
+            //pageWidth: 1000,
+            //pageHeight: 2000,
+            // pageHeight and pageWidth are swapped because the page is in landscape
+            pageHeight: this.getAttribute('pagewidth'),
+            pageWidth: this.getAttribute('pageheight'),
             scaleToPageSize: true,
+            scale: 50,
             landscape: true,
         });
 
