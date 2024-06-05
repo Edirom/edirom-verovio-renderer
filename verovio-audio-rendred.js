@@ -81,41 +81,35 @@ class VerovioPlayer extends HTMLElement {
         playButton.textContent = 'Play';
         playButton.id = 'playMIDI';
         this.shadowRoot.getElementById('nav').appendChild(playButton);
-        //this.shadowRoot.appendChild(playButton);
 
         // Create and append the stop button
         const stopButton = document.createElement('button');
         stopButton.textContent = 'Stop';
         stopButton.id = 'stopMIDI';
         this.shadowRoot.getElementById('nav').appendChild(stopButton);
-        //this.shadowRoot.appendChild(stopButton);
 
         // Create and append the stop button
         const nextButton = document.createElement('button');
         nextButton.textContent = 'next';
         nextButton.id = 'next';
         this.shadowRoot.getElementById('nav').appendChild(nextButton);
-        //this.shadowRoot.appendChild(nextButton);
 
         // Create and append the stop button
         const previousButton = document.createElement('button');
         previousButton.textContent = 'previous';
         previousButton.id = 'previous';
         this.shadowRoot.getElementById('nav').appendChild(previousButton);
-        //this.shadowRoot.appendChild(previousButton);
 
         // Create and append split view button
         const splitViewButton = document.createElement('button');
         splitViewButton.textContent = 'Split View';
         splitViewButton.id = 'splitView';
         this.shadowRoot.getElementById('nav').appendChild(splitViewButton);
-        //this.shadowRoot.appendChild(splitViewButton);
 
         // Create and append the notation div
         const notationDiv = document.createElement('div');
         notationDiv.id = 'notation';
         this.shadowRoot.getElementById('content').appendChild(notationDiv);
-        //this.shadowRoot.appendChild(notationDiv);
 
         console.log("this is the shadwo root", this.shadowRoot)
 
@@ -134,29 +128,6 @@ class VerovioPlayer extends HTMLElement {
         }).catch(error => {
             console.error('Error loading scripts:', error);
         });
-    }
-
-    async rerenderPlayer(width, height) {
-        const tk = new verovio.toolkit();
-        tk.setOptions({
-            // pageHeight and pageWidth are swapped because the page is in landscape
-            pageHeight: width,
-            pageWidth: height,
-            scaleToPageSize: true,
-            scale: 50,
-            landscape: true,
-        });
-
-        try {
-            const response = await fetch("https://www.verovio.org/examples/downloads/Schubert_Lindenbaum.mei");
-            const meiXML = await response.text();
-            tk.loadData(meiXML);
-            let svg = tk.renderToSVG(1);
-            this.shadowRoot.getElementById("notation").innerHTML = svg;
-        } catch (error) {
-            console.error('Error initializing player:', error);
-        }
-
     }
 
     async initPlayer(tk, MIDIjs) {
@@ -273,6 +244,29 @@ class VerovioPlayer extends HTMLElement {
         } catch (error) {
             console.error('Error initializing player:', error);
         }
+    }
+
+    async rerenderPlayer(width, height) {
+        const tk = new verovio.toolkit();
+        tk.setOptions({
+            // pageHeight and pageWidth are swapped because the page is in landscape
+            pageHeight: width,
+            pageWidth: height,
+            scaleToPageSize: true,
+            scale: 50,
+            landscape: true,
+        });
+
+        try {
+            const response = await fetch("https://www.verovio.org/examples/downloads/Schubert_Lindenbaum.mei");
+            const meiXML = await response.text();
+            tk.loadData(meiXML);
+            let svg = tk.renderToSVG(1);
+            this.shadowRoot.getElementById("notation").innerHTML = svg;
+        } catch (error) {
+            console.error('Error initializing player:', error);
+        }
+
     }
 }
 
