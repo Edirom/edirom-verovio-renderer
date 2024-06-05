@@ -16,7 +16,7 @@ class VerovioPlayer extends HTMLElement {
     // handle property change
     if(oldValue !== newValue){
         this.setAttribute(property, newValue);
-        this.renderPlayer();
+        this.rerenderPlayer(this.getAttribute('pagewidth'), this.getAttribute('pageheight'));
     } else {
         return;
     }
@@ -216,6 +216,29 @@ class VerovioPlayer extends HTMLElement {
         } catch (error) {
             console.error('Error initializing player:', error);
         }
+    }
+
+    async rerenderPlayer(width, height) {
+        const tk = new verovio.toolkit();
+        tk.setOptions({
+            // pageHeight and pageWidth are swapped because the page is in landscape
+            pageHeight: width,
+            pageWidth: height,
+            scaleToPageSize: true,
+            scale: 50,
+            landscape: true,
+        });
+
+        try {
+            const response = await fetch("https://www.verovio.org/examples/downloads/Schubert_Lindenbaum.mei");
+            const meiXML = await response.text();
+            tk.loadData(meiXML);
+            let svg = tk.renderToSVG(1);
+            this.shadowRoot.getElementById("notation").innerHTML = svg;
+        } catch (error) {
+            console.error('Error initializing player:', error);
+        }
+
     }
 }
 
