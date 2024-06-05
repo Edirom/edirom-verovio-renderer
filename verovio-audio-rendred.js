@@ -10,23 +10,23 @@ class VerovioPlayer extends HTMLElement {
 
     static get observedAttributes() {
         return ['pagewidth', 'pageheight',];
-      }
-// attribute change
-  attributeChangedCallback(property, oldValue, newValue) {
-    // handle property change
-    if(oldValue !== newValue){
-        this.setAttribute(property, newValue);
-        this.renderPlayer();
-    } else {
-        return;
     }
-  }
+    // attribute change
+    attributeChangedCallback(property, oldValue, newValue) {
+        // handle property change
+        if (oldValue !== newValue) {
+            this.setAttribute(property, newValue);
+            this.rerenderPlayer(this.getAttribute('pagewidth'), this.getAttribute('pageheight'));
+        } else {
+            return;
+        }
+    }
 
 
-  elementFromHTML(html) {
-    const template = document.createElement('template');
-            template.innerHTML = html.trim();
-            return template.content.firstChild;
+    elementFromHTML(html) {
+        const template = document.createElement('template');
+        template.innerHTML = html.trim();
+        return template.content.firstChild;
     }
 
     renderPlayer() {
@@ -37,26 +37,26 @@ class VerovioPlayer extends HTMLElement {
         this.shadowRoot.appendChild(loadPdf);
 
 
-              // Load Verovio and MIDI.js asynchronously
-              const loadVerovio = new Promise((resolve, reject) => {
-                const verovioScript = document.createElement('script');
-                verovioScript.src = "https://www.verovio.org/javascript/latest/verovio-toolkit-wasm.js";
-                verovioScript.defer = true;
-                verovioScript.onload = resolve;
-                verovioScript.onerror = reject;
-                this.shadowRoot.appendChild(verovioScript);
-            });
-    
-            const loadMidi = new Promise((resolve, reject) => {
-                const midiScript = document.createElement('script');
-                midiScript.src = "https://www.midijs.net/lib/midi.js";
-                midiScript.defer = true;
-                midiScript.onload = resolve;
-                midiScript.onerror = reject;
-                this.shadowRoot.host.appendChild(midiScript);
-            });
+        // Load Verovio and MIDI.js asynchronously
+        const loadVerovio = new Promise((resolve, reject) => {
+            const verovioScript = document.createElement('script');
+            verovioScript.src = "https://www.verovio.org/javascript/latest/verovio-toolkit-wasm.js";
+            verovioScript.defer = true;
+            verovioScript.onload = resolve;
+            verovioScript.onerror = reject;
+            this.shadowRoot.appendChild(verovioScript);
+        });
 
-        
+        const loadMidi = new Promise((resolve, reject) => {
+            const midiScript = document.createElement('script');
+            midiScript.src = "https://www.midijs.net/lib/midi.js";
+            midiScript.defer = true;
+            midiScript.onload = resolve;
+            midiScript.onerror = reject;
+            this.shadowRoot.host.appendChild(midiScript);
+        });
+
+
         const link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = 'verovio-css.css';
@@ -64,40 +64,58 @@ class VerovioPlayer extends HTMLElement {
         this.shadowRoot.appendChild(link);
 
         console.log("this is the shadow root", this.shadowRoot)
-              
+
+        const navDiv = document.createElement('div');
+        navDiv.id = 'nav';
+        navDiv.className = 'nav';
+        this.shadowRoot.appendChild(navDiv);
+
+        const contentDiv = document.createElement('div');
+        contentDiv.id = 'content';
+        contentDiv.className = 'content';
+        this.shadowRoot.appendChild(contentDiv);
+
 
         // Create and append the play button
         const playButton = document.createElement('button');
         playButton.textContent = 'Play';
         playButton.id = 'playMIDI';
-        this.shadowRoot.appendChild(playButton);
+        this.shadowRoot.getElementById('nav').appendChild(playButton);
+        //this.shadowRoot.appendChild(playButton);
 
         // Create and append the stop button
         const stopButton = document.createElement('button');
         stopButton.textContent = 'Stop';
         stopButton.id = 'stopMIDI';
-        this.shadowRoot.appendChild(stopButton);
+        this.shadowRoot.getElementById('nav').appendChild(stopButton);
+        //this.shadowRoot.appendChild(stopButton);
 
         // Create and append the stop button
         const nextButton = document.createElement('button');
         nextButton.textContent = 'next';
         nextButton.id = 'next';
-        this.shadowRoot.appendChild(nextButton);
+        this.shadowRoot.getElementById('nav').appendChild(nextButton);
+        //this.shadowRoot.appendChild(nextButton);
 
         // Create and append the stop button
         const previousButton = document.createElement('button');
         previousButton.textContent = 'previous';
         previousButton.id = 'previous';
-        this.shadowRoot.appendChild(previousButton);
+        this.shadowRoot.getElementById('nav').appendChild(previousButton);
+        //this.shadowRoot.appendChild(previousButton);
 
-
+        // Create and append split view button
+        const splitViewButton = document.createElement('button');
+        splitViewButton.textContent = 'Split View';
+        splitViewButton.id = 'splitView';
+        this.shadowRoot.getElementById('nav').appendChild(splitViewButton);
+        //this.shadowRoot.appendChild(splitViewButton);
 
         // Create and append the notation div
         const notationDiv = document.createElement('div');
         notationDiv.id = 'notation';
-        this.shadowRoot.appendChild(notationDiv);
-
-  
+        this.shadowRoot.getElementById('content').appendChild(notationDiv);
+        //this.shadowRoot.appendChild(notationDiv);
 
         console.log("this is the shadwo root", this.shadowRoot)
 
@@ -107,7 +125,7 @@ class VerovioPlayer extends HTMLElement {
                 if (typeof MIDIjs !== 'undefined') {
                     const tk = new verovio.toolkit();
                     console.log('Verovio and MIDI.js have loaded!', MIDIjs);
-                    
+
                     this.initPlayer(tk, MIDIjs);
                 } else {
                     console.error('MIDIjs is not loaded yet');
@@ -118,11 +136,32 @@ class VerovioPlayer extends HTMLElement {
         });
     }
 
+    async rerenderPlayer(width, height) {
+        const tk = new verovio.toolkit();
+        tk.setOptions({
+            // pageHeight and pageWidth are swapped because the page is in landscape
+            pageHeight: width,
+            pageWidth: height,
+            scaleToPageSize: true,
+            scale: 50,
+            landscape: true,
+        });
+
+        try {
+            const response = await fetch("https://www.verovio.org/examples/downloads/Schubert_Lindenbaum.mei");
+            const meiXML = await response.text();
+            tk.loadData(meiXML);
+            let svg = tk.renderToSVG(1);
+            this.shadowRoot.getElementById("notation").innerHTML = svg;
+        } catch (error) {
+            console.error('Error initializing player:', error);
+        }
+
+    }
+
     async initPlayer(tk, MIDIjs) {
         console.log('Initializing player...');
         tk.setOptions({
-            //pageWidth: 1000,
-            //pageHeight: 2000,
             // pageHeight and pageWidth are swapped because the page is in landscape
             pageHeight: this.getAttribute('pagewidth'),
             pageWidth: this.getAttribute('pageheight'),
@@ -133,7 +172,7 @@ class VerovioPlayer extends HTMLElement {
 
         let currentPage = 1;
 
-  
+
 
         const playMIDIHandler = () => {
             let base64midi = tk.renderToMIDI();
@@ -158,25 +197,42 @@ class VerovioPlayer extends HTMLElement {
         };
 
         const nextPageHandler = () => {
-            if(currentPage < tk.getPageCount()){
-                currentPage++ 
+            if (currentPage < tk.getPageCount()) {
+                currentPage++
                 this.shadowRoot.getElementById("notation").innerHTML = tk.renderToSVG(currentPage);
             }
         };
-        
 
         const previousPageHandler = () => {
-            if(currentPage != 1){
+            if (currentPage != 1) {
                 currentPage--
                 this.shadowRoot.getElementById("notation").innerHTML = tk.renderToSVG(currentPage);
             }
 
         };
 
-        const midiHightlightingHandler = function (event) {
-            console.log("number of pages are " ,tk.getPageCount())
+        // Toggle split view
+        const splitViewHandler = () => {
+            if (this.shadowRoot.getElementById('facs-viewer') !== null) {
+                console.log("removing the element");
+                this.shadowRoot.getElementById('facs-viewer').remove();
+                this.rerenderPlayer(this.getAttribute('pagewidth'), this.getAttribute('pageheight'));
+            }else {
+                const newElement = this.elementFromHTML(`
+                    <div id="facs-viewer">
+                        <img src="https://picsum.photos/400/600"/>
+                    </div>
+                `);
+                this.shadowRoot.getElementById('content').appendChild(newElement);
+                this.rerenderPlayer(this.getAttribute('pagewidth') / 2, this.getAttribute('pageheight'));
+            }
 
-            console.log('MIDI event:', event); 
+        }
+
+        const midiHightlightingHandler = function (event) {
+            console.log("number of pages are ", tk.getPageCount())
+
+            console.log('MIDI event:', event);
             // Remove the attribute 'playing' of all notes previously playing
             let playingNotes = this.shadowRoot.querySelectorAll('g.note.playing');
             for (let playingNote of playingNotes) playingNote.classList.remove("playing");
@@ -204,6 +260,7 @@ class VerovioPlayer extends HTMLElement {
         this.shadowRoot.getElementById('stopMIDI').addEventListener('click', stopMIDIHandler);
         this.shadowRoot.getElementById('next').addEventListener('click', nextPageHandler);
         this.shadowRoot.getElementById('previous').addEventListener('click', previousPageHandler);
+        this.shadowRoot.getElementById('splitView').addEventListener('click', splitViewHandler);
 
 
 
