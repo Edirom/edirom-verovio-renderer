@@ -188,10 +188,10 @@ class VerovioPlayer extends HTMLElement {
                 console.log("removing the element");
                 this.shadowRoot.getElementById('facs-viewer').remove();
                 this.rerenderPlayer(this.getAttribute('pagewidth'), this.getAttribute('pageheight'));
-            }else {
+            } else {
                 const newElement = this.elementFromHTML(`
                     <div id="facs-viewer">
-                        <img src="https://picsum.photos/400/600"/>
+                        <slot/>
                     </div>
                 `);
                 this.shadowRoot.getElementById('content').appendChild(newElement);

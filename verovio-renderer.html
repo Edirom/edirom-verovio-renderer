@@ -1,22 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Verovio Renderer Demo</title>
   <script src="verovio-renderer-component2.js"></script>
   <script src="verovio-audio-rendred.js"></script>
-  <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>  
+  <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
   <link href="verovio-css.css" rel="stylesheet" type="text/css" />
 
   <!-- A JavaScript MIDI player -->
 </head>
+
 <body>
   <h1>Verovio Renderer Demo</h1>
+  <verovio-player id="verovioPlayer">
+    <!-- Example slot input for split view -->
+    <img src="https://picsum.photos/400/600" />
+  </verovio-player>
 
-   <verovio-player id="verovioPlayer"></verovio-player>
-    
 </body>
+
 </html>
 
 
