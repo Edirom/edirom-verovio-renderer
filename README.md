@@ -17,13 +17,13 @@ The imported verovio library comes with the license  LGPL-3.0, GPL-3.0.
 
 1. Clone the repository into a directory of your choice
 2. Include the path to the web component's JavaScript file into the `<head>` an HTML page
-```html
+'''html
 <script src="path/to/edirom-verovio-renderer.js"></script>
-```
+'''
 3. Include a custom element (this is specified and can be processed by the component) into the `<body>` of the HTML page. The attributes of the custom element are used as parameters at initialization of the component and changing them (manually or programmatically) can control the components state and behaviour during runtime. The state changes of the web component are communicated outwards via custom events (called 'communicate-{change-type}-update'). The component/document that instantiates the web component (its parent) can listen (via event listeners which have to be implemented individually) and react to the communicated state changes if necessary. The separation of inward communication (via custom element's attributes) and outward communication (via custom events) is esp. necessary to handle frequently populated information like currentTime of the audio player and avoid interference between reading and writing info about the component's state.
-```html
+'''html
 <edirom-verovio-renderer   width='' height=''   zoom='' pagenumber=''  meiurl=''></edirom-verovio-renderer>
-```
+'''
 
 ### Parameters
 
