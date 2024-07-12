@@ -31,8 +31,9 @@ class VerovioAPIRenderer extends HTMLElement {
       <div id="verovio-header">
           <button id="next_btn">Next</button>
           <button id="previous_btn">Previous</button> 
-          ${this.pageNumber} / ${this.totalPages}
-      </div>
+          <button id="zoom_up">+</button>
+          <button id="zoom_down">-</button> 
+          <span id="page_info">${this.pageNumber} / ${this.totalPages}</span>
     </body>`
 
   }
@@ -43,14 +44,71 @@ class VerovioAPIRenderer extends HTMLElement {
 
       this.shadowRoot.getElementById("next_btn").addEventListener('click', () => this.calculatePageNumber('next'));
       this.shadowRoot.getElementById("previous_btn").addEventListener('click', () => this.calculatePageNumber('previous'));
+      this.shadowRoot.getElementById("zoom_up").addEventListener('click', () => this.calculateZoom('zoomUp'));
+      this.shadowRoot.getElementById("zoom_down").addEventListener('click', () => this.calculateZoom('zoomDown'));
   }
 
+  static get observedAttributes() {
+    return ['zoom', 'height', 'width', 'pagenumber', 'meiurl'];
+  }
+  attributeChangedCallback(property, oldValue, newValue) {
+
+    // handle property change
+    this.set(property, newValue);
+
+  }
+  set(property, newPropertyValue){
+
+
+    // set internal and html properties  
+    this[property] = newPropertyValue;
+    // custom event for property update
+    const event = new CustomEvent('communicate-'+property+'-update', {
+        detail: { [property]: newPropertyValue },
+        bubbles: true
+    });
+    this.dispatchEvent(event);
+  }
+  calculateZoom(type){
+    this.zoom = parseInt(this.zoom)
+    this.zoom += type === "zoomUp" ? 10 : -10;
+    this.zoom = Math.max(10, Math.min(this.zoom, 100));
+    if (this.zoom <= 100) {
+        // Get the current options
+        let options = this.tk.getOptions();
+        // Update the zoom value
+        options.scale = this.zoom;
+        // Set the updated options
+        this.tk.setOptions(options);
+        // Re-render the SVG with the updated options
+        this.renderSVG();
+    }
+    console.log("zoom is ", this.zoom);
+    console.log("after assignement zoom is ", this.zoom)
+  }
   updatePageDimensions() {
-      this.pageHeight = this.verovioElement.clientHeight * 100 / this.zoom;
-      this.pageWidth = this.verovioElement.clientWidth * 100 / this.zoom;
+      if(this.height !=null){
+        this.pageHeight =  this.height * 100 / this.zoom;
+        console.log("this is the page hight is   ", this.pageHeight )
+
+      }
+      else{
+        this.pageHeight = this.verovioElement.clientHeight;
+
+        console.log("the new height is ", this.pageHeight )
+      }
+      
+      if(this.width !=null){
+        this.pageWidth =  this.width * 100 / this.zoom;
+      }
+      else{
+        this.pageWidth = this.verovioElement.clientWidth;
+      }
+
   }
 
   setupOptions() {
+    console.log("this zoom is at setoptions", this.zoom)
       this.options = {
           pageHeight: this.pageHeight,
           pageWidth: this.pageWidth,
@@ -60,7 +118,9 @@ class VerovioAPIRenderer extends HTMLElement {
   }
 
   fetchAndRenderMEI() {
-      fetch('https://www.verovio.org/examples/downloads/Schubert_Lindenbaum.mei')
+    console.log("this is page number ", this.pageNumber)
+
+    fetch(this.meiurl)
           .then((response) => response.text())
           .then((mei) => {
               this.tk.loadData(mei);
@@ -68,17 +128,21 @@ class VerovioAPIRenderer extends HTMLElement {
           });
   }
   calculatePageNumber(type) {
+    console.log("page number is ", this.pageNumber)
     this.pageNumber += type === "next" ? 1 : -1;
     this.pageNumber = Math.max(1, Math.min(this.pageNumber, this.totalPages));
     if(this.pageNumber <= this.totalPages) {
         this.renderSVG();
     }
 }
-
-
-
   renderSVG() {
-      this.totalPages = this.tk.getPageCount();
+     this.totalPages = this.tk.getPageCount();
+
+     this.pagenumber = parseInt(this.pagenumber)
+     this.pageNumber = (this.pagenumber != null && this.pagenumber !== '' && this.pagenumber >= 1 && this.pagenumber <= this.totalPages) ? this.pagenumber : this.pageNumber;
+     this.pagenumber = 0
+     this.shadowRoot.getElementById("page_info").textContent = `${this.pageNumber} / ${this.totalPages}`;
+
       let svg = this.tk.renderToSVG(this.pageNumber);
       this.shadowRoot.getElementById("verovio-svg").innerHTML = svg;
       this.styleSVGElements();
@@ -109,6 +173,7 @@ class VerovioAPIRenderer extends HTMLElement {
           this.tk.setOptions(this.options);
           this.fetchAndRenderMEI();
       });
+      console.log("the screen i sresized")
       resizeObserver.observe(this.verovioElement);
   }
 
@@ -117,11 +182,6 @@ class VerovioAPIRenderer extends HTMLElement {
       verovioScript.src = "https://www.verovio.org/javascript/latest/verovio-toolkit-wasm.js";
       verovioScript.defer = true;
       this.shadowRoot.appendChild(verovioScript);
-
-    
-
-
-
       verovioScript.onload = () => {
           verovio.module.onRuntimeInitialized = async () => {
               this.tk = new verovio.toolkit();
