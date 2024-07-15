@@ -1,4 +1,4 @@
-![GitHub License](https://github.com/Edirom/edirom-verovio-renderer)
+![GitHub License](https://img.shields.io/github/license/Edirom/edirom-verovio-renderer) 
 
 # Edirom Verovio Renderer Component
 
