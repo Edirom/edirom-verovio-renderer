@@ -11,8 +11,5 @@ authors:
     affiliation: Universität Paderborn
 repository-code: 'https://github.com/Edirom/edirom-verovio-renderer'
 abstract: >-
-  This web component displays IIIF tile sources using the openseadragon library (https://openseadragon.github.io). 
-  It is intended to be used in tbe Edirom Online, but can also be (re-)used 
-  in other web applications. No compilation or building is necessary to use 
-  the web component.
+  This web component renders an SVG from an MEI file using the Verovio library (https://www.verovio.org/index.xhtml). It is intended to be used in tbe Edirom Online, but can also be (re-)used in other web applications. No compilation or building is necessary to use the web component. 
 license: MIT
