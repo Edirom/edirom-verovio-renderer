@@ -39,5 +39,5 @@ The verovio parameters mentioned below are based on the available [Verovio libra
 | width     | integer    | The width of the svg.              |  "200"   | 
 | height    | integer    | The height of the the rendered svg.      |  "700"       |
 | zoom      | integer    | The zoom level for rendered svg.           |   "20"      |
-| meiurl    | string     | URL for the source MEI.|       "" |
+| meiurl    | string     | URL for the source MEI.|       "https://www.verovio.org/examples/downloads/Schubert_Lindenbaum.mei" |
 
