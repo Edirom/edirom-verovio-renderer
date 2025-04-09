@@ -267,7 +267,6 @@ class EdiromVerovioRenderer extends HTMLElement {
 
     let svg = this.tk.renderToSVG(this.pageNumber);
     this.shadowRoot.getElementById("verovio-svg").innerHTML = svg;
-    this.styleSVGElements();
 
 
     this.dispatchEvent(new CustomEvent('page-info-update', {
