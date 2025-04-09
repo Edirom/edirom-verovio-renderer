@@ -2,27 +2,18 @@ class EdiromVerovioRenderer extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this.bodyElement = this.parentElement;
-    this.verovioElement = this.bodyElement.parentElement;
     this.tk = "";
     this.options = "";
     this.zoom = 20;
-    this.updatePageDimensions();
     this.pageNumber = 1
     this.totalPages = ""
 
     this.shadowRoot.innerHTML = `
       <style>
-          #verovio-header {
-              width: 100%;
-              height: 20px;
-              background-color: #d0cccc;
-              bottom: 0;
-              left: 0;
-              position: sticky;
-          }
+
           #verovio-svg {
-              margin-top: 3%; /* Adjust to ensure SVG content doesn't overlap with header */
+              margin-bottom: 30%; /* Adjust to ensure SVG content doesn't overlap with header */
+              
           }
       </style>
 
@@ -37,6 +28,10 @@ class EdiromVerovioRenderer extends HTMLElement {
   connectedCallback() {
     this.renderVerovio();
     this.setupResizeObserver();
+    this.bodyElement = this.parentElement;
+    this.verovioElement = this.bodyElement.parentElement;
+    this.updatePageDimensions();
+
 
     const btnNext = document.getElementById("btn-next");
     const btnPrev = document.getElementById("btn-prev");
@@ -166,7 +161,38 @@ class EdiromVerovioRenderer extends HTMLElement {
     return null;
   }
     
+    
+  getMeasureIdByNumber(nValue) {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(this.meiData, "application/xml");
   
+    let measures;
+  
+    if (this.mdivname) {
+      // Find the <mdiv> with the label attribute
+      const mdiv = xmlDoc.querySelector(`mdiv[label="${this.mdivname}"]`);
+      if (!mdiv) {
+        console.warn(`No <mdiv> found with label="${this.mdivname}"`);
+        return null;
+      }
+  
+      // Only search within this mdiv
+      measures = mdiv.querySelectorAll("measure");
+    } else {
+      // No mdiv specified, search all measures in the document
+      measures = xmlDoc.querySelectorAll("measure");
+    }
+  
+    // Look for a measure with matching n value
+    for (let measure of measures) {
+      if (measure.getAttribute("n") === nValue.toString()) {
+        return measure.getAttribute("xml:id"); // Verovio needs this
+      }
+    }
+  
+    console.warn(`No <measure n="${nValue}"> found ${this.mdivname ? `in <mdiv label="${this.mdivname}">` : "in the MEI file"}`);
+    return null;
+  }
   
   calculateZoom(type) {
     this.zoom = parseInt(this.zoom)
