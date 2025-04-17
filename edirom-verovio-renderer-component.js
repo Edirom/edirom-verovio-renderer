@@ -31,22 +31,11 @@ class EdiromVerovioRenderer extends HTMLElement {
     this.bodyElement = this.parentElement;
     this.verovioElement = this.bodyElement.parentElement;
     this.updatePageDimensions();
-
-
-    const btnNext = document.getElementById("btn-next");
-    const btnPrev = document.getElementById("btn-prev");
-    const btnZoomIn = document.getElementById("btn-zoom-in");
-    const btnZoomOut = document.getElementById("btn-zoom-out");
-  
-    if (btnNext) btnNext.addEventListener("click", () => this.calculatePageNumber("next"));
-    if (btnPrev) btnPrev.addEventListener("click", () => this.calculatePageNumber("previous"));
-    if (btnZoomIn) btnZoomIn.addEventListener("click", () => this.calculateZoom("zoomUp"));
-    if (btnZoomOut) btnZoomOut.addEventListener("click", () => this.calculateZoom("zoomDown"));
-   
   }
 
   static get observedAttributes() {
     return ['zoom', 'height', 'width', 'pagenumber', 'meiurl', 'measurenumber', 'mdivname', "veroviowidth", "verovioheight"];
+
   }
   attributeChangedCallback(property, oldValue, newValue) {
 
@@ -67,6 +56,7 @@ class EdiromVerovioRenderer extends HTMLElement {
     });
     this.dispatchEvent(event);
     this.handlePropertyChange(property, newPropertyValue) 
+
   }
 
   handlePropertyChange(property, newPropertyValue) {
@@ -164,8 +154,6 @@ class EdiromVerovioRenderer extends HTMLElement {
       console.warn(`Measure with n="${measureNumber}" not found`);
     }
   }
-  
-  
   
   getMeasureIdByNumber(nValue) {
     const parser = new DOMParser();
@@ -377,5 +365,4 @@ class EdiromVerovioRenderer extends HTMLElement {
     };
   }
 }
-
 customElements.define('edirom-verovio-renderer', EdiromVerovioRenderer);
