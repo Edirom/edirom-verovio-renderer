@@ -34,7 +34,7 @@ class EdiromVerovioRenderer extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['zoom', 'height', 'width', 'pagenumber', 'meiurl', 'measurenumber', 'mdivname', "veroviowidth", "verovioheight"];
+    return ['zoom', 'height', 'width', 'pagenumber', 'meiurl', 'measurenumber', 'mdivname', "movementid", "veroviowidth", "verovioheight"];
 
   }
   attributeChangedCallback(property, oldValue, newValue) {
@@ -96,8 +96,11 @@ class EdiromVerovioRenderer extends HTMLElement {
       this.mdivname = newPropertyValue;
       console.log("mdiv name is ", newPropertyValue)
       break;
+    case 'movementid':      
+      this.movementid = newPropertyValue;
+      console.log("movement id is setted ")
+      this.fetchAndRenderMEI(newPropertyValue)
     case 'veroviowidth':
-      console.log("this is the case for width 1")
 
       this.verovioWidth = newPropertyValue;
       this.setupOptions();
@@ -154,6 +157,22 @@ class EdiromVerovioRenderer extends HTMLElement {
       console.warn(`Measure with n="${measureNumber}" not found`);
     }
   }
+  gotoMdiv(movementId) {
+
+      console.log("movement id is ", movementId)
+      const page = this.tk.getPageWithElement(movementId);
+      console.log("page is ", page)
+
+      if (page) {
+        this.pageNumber = page;
+        this.renderSVG();
+        console.log(`Navigated to measure ${movementId} on page ${page}`);
+      } else {
+        console.warn(`Page not found for measure ID: ${movementId}`);
+      }
+
+  }
+  
   
   getMeasureIdByNumber(nValue) {
     const parser = new DOMParser();
@@ -196,7 +215,7 @@ class EdiromVerovioRenderer extends HTMLElement {
   
     if (this.mdivname) {
       // Find the <mdiv> with the label attribute
-      const mdiv = xmlDoc.querySelector(`mdiv[label="${this.mdivname}"]`);
+      const mdiv = xmlDoc.querySelector(`mdiv[xml:id="${this.mdivid}"]`);
       if (!mdiv) {
         console.warn(`No <mdiv> found with label="${this.mdivname}"`);
         return null;
@@ -219,7 +238,7 @@ class EdiromVerovioRenderer extends HTMLElement {
     console.warn(`No <measure n="${nValue}"> found ${this.mdivname ? `in <mdiv label="${this.mdivname}">` : "in the MEI file"}`);
     return null;
   }
-  
+
   calculateZoom(type) {
     this.zoom = parseInt(this.zoom)
     this.zoom += type === "zoomUp" ? 10 : -10;
@@ -256,42 +275,44 @@ class EdiromVerovioRenderer extends HTMLElement {
   }
 
   setupOptions() {
-    console.log("Zoom level:", this.zoom);
-  
-    const targetSystemsPerPage = 20;
-    const estimatedSystemHeight = 250;
-  
-    const scale = this.zoom;
-    const pageHeight = targetSystemsPerPage * estimatedSystemHeight;
-
-
     this.options = {
       breaks: "auto",
-      scale: 40,
+      scale: 40, // fixed scale
       spacingStaff: 7,
-      pageHeight: 4500, // experiment to fit ~4 systems
+      pageHeight: 4500, // fixed height
       pageWidth: 4500,
       svgAdditionalAttribute: ["note@pname", "note@oct"],
       footer: "none",
-      header: "none"
+      header: "none",
+      
     };
     
   
     console.log("Verovio Options:", this.options);
   }
   
-
   fetchAndRenderMEI() {
-    console.log("this is page number ", this.pageNumber)
-
-    fetch(this.meiurl)
+    console.log("movement id is ", this.movementid);
+    let url;
+    if (this.movementid) {
+      url = this.meiurl + "&movementId=" + this.movementid;
+    } else {
+      url = this.meiurl;
+    }
+  
+    console.log("url is hahaha ", url)
+    fetch(url)
       .then((response) => response.text())
       .then((mei) => {
         this.meiData = mei;
-        this.tk.loadData(mei);
-        this.renderSVG();
+        this.tk.loadData(mei); // Load MEI
+        this.renderSVG();      // Render
+      })
+      .catch((error) => {
+        console.error("Error fetching MEI:", error);
       });
   }
+  
   calculatePageNumber(type) {
     console.log("page number is ", this.pageNumber)
     this.pageNumber += type === "next" ? 1 : -1;
@@ -302,7 +323,6 @@ class EdiromVerovioRenderer extends HTMLElement {
   }
   renderSVG() {
     this.totalPages = this.tk.getPageCount();
-
     this.pagenumber = parseInt(this.pagenumber)
     this.pageNumber = (this.pagenumber != null && this.pagenumber !== '' && this.pagenumber >= 1 && this.pagenumber <= this.totalPages) ? this.pagenumber : this.pageNumber;
     this.pagenumber = 0
