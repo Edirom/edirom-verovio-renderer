@@ -105,7 +105,7 @@ class EdiromVerovioRenderer extends HTMLElement {
         this.verovioWidth = newPropertyValue;
         this.setupOptions();
         //this.tk?.setOptions(this.options);
-        this.chnageVerovioWidth(newPropertyValue);
+        this.changeVerovioWidth(newPropertyValue);
         console.log("this is the case for width 2")
 
 
@@ -117,7 +117,7 @@ class EdiromVerovioRenderer extends HTMLElement {
         this.verovioHeight = newPropertyValue;
         this.setupOptions();
         // this.tk?.setOptions(this.options);
-        this.chnageVerovioHeight(newPropertyValue);
+        this.changeVerovioHeight(newPropertyValue);
         console.log("this is the case for height 2")
 
 
@@ -125,7 +125,7 @@ class EdiromVerovioRenderer extends HTMLElement {
     }
 
   }
-  chnageVerovioHeight(verovioHeight) {
+  changeVerovioHeight(verovioHeight) {
     let options = this.tk.getOptions();
     options.pageHeight = verovioHeight;
     this.tk.setOptions(options)
@@ -133,7 +133,7 @@ class EdiromVerovioRenderer extends HTMLElement {
     console.log("update height")
 
   }
-  chnageVerovioWidth(verovioWidth) {
+  changeVerovioWidth(verovioWidth) {
     let options = this.tk.getOptions();
     options.pageWidth = verovioWidth;
     this.tk.setOptions(options)
