@@ -41,7 +41,7 @@ class EdiromVerovioRenderer extends HTMLElement {
 
     // handle property change
     this.set(property, newValue);
-    console.log("property ", property , " is change from ", oldValue, " to ", newValue )
+    console.log("property ", property, " is change from ", oldValue, " to ", newValue)
 
   }
   set(property, newPropertyValue) {
@@ -55,95 +55,95 @@ class EdiromVerovioRenderer extends HTMLElement {
       bubbles: true
     });
     this.dispatchEvent(event);
-    this.handlePropertyChange(property, newPropertyValue) 
+    this.handlePropertyChange(property, newPropertyValue)
 
   }
 
   handlePropertyChange(property, newPropertyValue) {
 
 
-  switch (property) {
-    case 'zoom':
-      this.zoom = parseInt(newPropertyValue);
-      this.setupOptions();
-      this.tk?.setOptions(this.options);
-      this.renderSVG();
-      break;
+    switch (property) {
+      case 'zoom':
+        this.zoom = parseInt(newPropertyValue);
+        this.setupOptions();
+        this.tk?.setOptions(this.options);
+        this.renderSVG();
+        break;
 
-    case 'pagenumber':
-      this.pageNumber = parseInt(newPropertyValue);
-      this.renderSVG();
-      break;
+      case 'pagenumber':
+        this.pageNumber = parseInt(newPropertyValue);
+        this.renderSVG();
+        break;
 
-    case 'height':
-    case 'width':
-      this[property] = parseInt(newPropertyValue);
-      this.updatePageDimensions();
-      this.setupOptions();
-      this.tk?.setOptions(this.options);
-      this.renderSVG();
-      break;
+      case 'height':
+      case 'width':
+        this[property] = parseInt(newPropertyValue);
+        this.updatePageDimensions();
+        this.setupOptions();
+        this.tk?.setOptions(this.options);
+        this.renderSVG();
+        break;
 
-    case 'meiurl':
-      this.meiurl = newPropertyValue;
-      this.fetchAndRenderMEI();
-      break;
+      case 'meiurl':
+        this.meiurl = newPropertyValue;
+        this.fetchAndRenderMEI();
+        break;
 
-    case 'measurenumber':
-      this.gotoMeasure(newPropertyValue);
-      break;
-    case 'mdivname':
-      this.mdivname = newPropertyValue;
-      console.log("mdiv name is ", newPropertyValue)
-      break;
-    case 'movementid':      
-      this.movementid = newPropertyValue;
-      console.log("movement id is setted ")
-      this.fetchAndRenderMEI(newPropertyValue)
-    case 'veroviowidth':
+      case 'measurenumber':
+        this.gotoMeasure(newPropertyValue);
+        break;
+      case 'mdivname':
+        this.mdivname = newPropertyValue;
+        console.log("mdiv name is ", newPropertyValue)
+        break;
+      case 'movementid':
+        this.movementid = newPropertyValue;
+        console.log("movement id is setted ")
+        this.fetchAndRenderMEI(newPropertyValue)
+      case 'veroviowidth':
 
-      this.verovioWidth = newPropertyValue;
-      this.setupOptions();
-      //this.tk?.setOptions(this.options);
-      this.chnageVerovioWidth(newPropertyValue);
-      console.log("this is the case for width 2")
-
-
-
-      break;
-    case 'verovioheight':
-      console.log("this is the case for height 1")
-
-      this.verovioHeight = newPropertyValue;
-      this.setupOptions();
-     // this.tk?.setOptions(this.options);
-      this.chnageVerovioHeight(newPropertyValue);
-      console.log("this is the case for height 2")
+        this.verovioWidth = newPropertyValue;
+        this.setupOptions();
+        //this.tk?.setOptions(this.options);
+        this.chnageVerovioWidth(newPropertyValue);
+        console.log("this is the case for width 2")
 
 
-      break;
+
+        break;
+      case 'verovioheight':
+        console.log("this is the case for height 1")
+
+        this.verovioHeight = newPropertyValue;
+        this.setupOptions();
+        // this.tk?.setOptions(this.options);
+        this.chnageVerovioHeight(newPropertyValue);
+        console.log("this is the case for height 2")
+
+
+        break;
+    }
+
   }
-  
-  }
-  chnageVerovioHeight(verovioHeight){
+  chnageVerovioHeight(verovioHeight) {
     let options = this.tk.getOptions();
     options.pageHeight = verovioHeight;
-    this.tk.setOptions(options) 
+    this.tk.setOptions(options)
     this.renderSVG();
     console.log("update height")
 
   }
-  chnageVerovioWidth(verovioWidth){
+  chnageVerovioWidth(verovioWidth) {
     let options = this.tk.getOptions();
     options.pageWidth = verovioWidth;
-    this.tk.setOptions(options)  
+    this.tk.setOptions(options)
     this.renderSVG();
     console.log("update width")
 
   }
   gotoMeasure(measureNumber) {
     const measureId = this.getMeasureIdByNumber(measureNumber);
-  
+
     if (measureId) {
       const page = this.tk.getPageWithElement(measureId);
       if (page) {
@@ -159,27 +159,27 @@ class EdiromVerovioRenderer extends HTMLElement {
   }
   gotoMdiv(movementId) {
 
-      console.log("movement id is ", movementId)
-      const page = this.tk.getPageWithElement(movementId);
-      console.log("page is ", page)
+    console.log("movement id is ", movementId)
+    const page = this.tk.getPageWithElement(movementId);
+    console.log("page is ", page)
 
-      if (page) {
-        this.pageNumber = page;
-        this.renderSVG();
-        console.log(`Navigated to measure ${movementId} on page ${page}`);
-      } else {
-        console.warn(`Page not found for measure ID: ${movementId}`);
-      }
+    if (page) {
+      this.pageNumber = page;
+      this.renderSVG();
+      console.log(`Navigated to measure ${movementId} on page ${page}`);
+    } else {
+      console.warn(`Page not found for measure ID: ${movementId}`);
+    }
 
   }
-  
-  
+
+
   getMeasureIdByNumber(nValue) {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(this.meiData, "application/xml");
-  
+
     let measures;
-  
+
     if (this.mdivname) {
       // Find the <mdiv> with the label attribute
       const mdiv = xmlDoc.querySelector(`mdiv[label="${this.mdivname}"]`);
@@ -187,32 +187,32 @@ class EdiromVerovioRenderer extends HTMLElement {
         console.warn(`No <mdiv> found with label="${this.mdivname}"`);
         return null;
       }
-  
+
       // Only search within this mdiv
       measures = mdiv.querySelectorAll("measure");
     } else {
       // No mdiv specified, search all measures in the document
       measures = xmlDoc.querySelectorAll("measure");
     }
-  
+
     // Look for a measure with matching n value
     for (let measure of measures) {
       if (measure.getAttribute("n") === nValue.toString()) {
         return measure.getAttribute("xml:id"); // Verovio needs this
       }
     }
-  
+
     console.warn(`No <measure n="${nValue}"> found ${this.mdivname ? `in <mdiv label="${this.mdivname}">` : "in the MEI file"}`);
     return null;
   }
-    
-    
+
+
   getMeasureIdByNumber(nValue) {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(this.meiData, "application/xml");
-  
+
     let measures;
-  
+
     if (this.mdivname) {
       // Find the <mdiv> with the label attribute
       const mdiv = xmlDoc.querySelector(`mdiv[xml:id="${this.mdivid}"]`);
@@ -220,21 +220,21 @@ class EdiromVerovioRenderer extends HTMLElement {
         console.warn(`No <mdiv> found with label="${this.mdivname}"`);
         return null;
       }
-  
+
       // Only search within this mdiv
       measures = mdiv.querySelectorAll("measure");
     } else {
       // No mdiv specified, search all measures in the document
       measures = xmlDoc.querySelectorAll("measure");
     }
-  
+
     // Look for a measure with matching n value
     for (let measure of measures) {
       if (measure.getAttribute("n") === nValue.toString()) {
         return measure.getAttribute("xml:id"); // Verovio needs this
       }
     }
-  
+
     console.warn(`No <measure n="${nValue}"> found ${this.mdivname ? `in <mdiv label="${this.mdivname}">` : "in the MEI file"}`);
     return null;
   }
@@ -284,13 +284,13 @@ class EdiromVerovioRenderer extends HTMLElement {
       svgAdditionalAttribute: ["note@pname", "note@oct"],
       footer: "none",
       header: "none",
-      
+
     };
-    
-  
+
+
     console.log("Verovio Options:", this.options);
   }
-  
+
   fetchAndRenderMEI() {
     console.log("movement id is ", this.movementid);
     let url;
@@ -299,7 +299,7 @@ class EdiromVerovioRenderer extends HTMLElement {
     } else {
       url = this.meiurl;
     }
-  
+
     console.log("url is hahaha ", url)
     fetch(url)
       .then((response) => response.text())
@@ -312,7 +312,7 @@ class EdiromVerovioRenderer extends HTMLElement {
         console.error("Error fetching MEI:", error);
       });
   }
-  
+
   calculatePageNumber(type) {
     console.log("page number is ", this.pageNumber)
     this.pageNumber += type === "next" ? 1 : -1;
