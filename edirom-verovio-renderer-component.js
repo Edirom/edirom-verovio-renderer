@@ -1,59 +1,128 @@
+/**
+ * Represents the EdiromVerovioRenderer custom element.
+ * @class
+ * @extends HTMLElement
+ */
 class EdiromVerovioRenderer extends HTMLElement {
+ 
+  /**
+   * Creates an instance of EdiromVerovioRenderer.
+   * @constructor
+   */
   constructor() {
     super();
+
+    /** attach shadow root with mode "open" */
     this.attachShadow({ mode: 'open' });
-    this.tk = "";
-    this.options = "";
-    this.zoom = 20;
-    this.pageNumber = 1
-    this.totalPages = ""
 
-    this.shadowRoot.innerHTML = `
+    /** global variables */
+    this.tk = null;
+    this.totalPages = 0;
+
+    /** set global properties */
+    this.veroviourl = this.getAttribute('verovio-url') || "https://www.verovio.org/javascript/5.3.2/verovio-toolkit-wasm.js";    
+    this.options = this.getAttribute("verovio-options") || {
+      breaks: "auto",
+      scale: 20,
+      spacingStaff: 7,
+      pageHeight: 4500,
+      pageWidth: 4500,
+      footer: "none",
+      header: "none",
+    }; 
+
+    this.meiurl = this.getAttribute('meiurl') || "";
+    this.zoom = this.getAttribute("zoom") || 20;
+    this.pageNumber = this.getAttribute("pagenumber") || 1;
+
+    this.shadowRoot.innerHTML += `
       <style>
-
           #verovio-svg {
               margin-bottom: 30%; /* Adjust to ensure SVG content doesn't overlap with header */
               
           }
       </style>
-
-      <div id="verovio-svg">
-      </div>
-      <div id="verovio-header">
- 
-          <span id="page_info"></span>
-    </body>`
-
+      <div id="verovio-svg"></div>
+      `;
   }
+
   connectedCallback() {
-    this.renderVerovio();
-    this.setupResizeObserver();
-    this.bodyElement = this.parentElement;
-    this.verovioElement = this.bodyElement.parentElement;
-    this.updatePageDimensions();
+
+    console.log("Edirom Verovio Renderer added to page.")
+
+    /** load the verovio library */
+    import(this.veroviourl)
+      .then((module) => {
+        verovio.module.onRuntimeInitialized = () => {
+          this.tk = new verovio.toolkit();
+          console.log("Verovio version " + this.tk.getVersion() + " has been loaded!");
+
+          /** set rendering options for verovio */
+          this.tk.setOptions(this.options);
+
+          /** fetch the mei file and render svg */
+          this.fetchAndRenderMEI();
+        };
+      })
+      .catch((err) => {
+        console.error(err.message);
+      });
+
+    this.verovioElement = this;
   }
 
+  /**
+   * Returns the list of observed attributes for the EdiromVerovioRenderer custom element.
+   * @static
+   * @returns {Array<string>} The list of observed attributes.
+   */
   static get observedAttributes() {
-    return ['zoom', 'height', 'width', 'pagenumber', 'meiurl', 'measurenumber', 'mdivname', "movementid", "veroviowidth", "verovioheight"];
-
+    return ['zoom', 'height', 'width', 'pagenumber', 'meiurl', 'measurenumber', 'mdivname', "movementid", "pagewidth", "pageheight", "verovio-url", "verovio-options"];
   }
+
+  /**
+   * Invoked when the custom element is disconnected from the document's DOM.
+   */
+  disconnectedCallback() { }
+
+  /**
+   * Invoked when the custom element is moved to a new document.
+   */
+  adoptedCallback() { }
+
+  /**
+   * Invoked when one of the custom element's attributes is added, removed, or changed.
+   * @param {string} property - The name of the attribute that was changed.
+   * @param {*} oldValue - The previous value of the attribute.
+   * @param {*} newValue - The new value of the attribute.
+   */
   attributeChangedCallback(property, oldValue, newValue) {
 
     // handle property change
     this.set(property, newValue);
-    console.log("property ", property, " is change from ", oldValue, " to ", newValue)
-
+    console.debug("property ", property, " is changed from '", oldValue, "' to '", newValue, "'");
   }
+
+  /**
+   * Sets the value of a global property and triggers property update events.
+   * @param {string} property - The name of the property to set.
+   * @param {*} newPropertyValue - The new value to set for the property.
+   */
   set(property, newPropertyValue) {
 
-
-    // set internal and html properties  
+    /** set internal and html properties */
     this[property] = newPropertyValue;
-    // custom event for property update
+
+    /** custom event for property update  */
     const event = new CustomEvent('communicate-' + property + '-update', {
-      detail: { [property]: newPropertyValue },
+      detail: { 
+        element: this.tagName.toLowerCase(),
+        property: property,
+        value: newPropertyValue
+      },
       bubbles: true
     });
+
     this.dispatchEvent(event);
     this.handlePropertyChange(property, newPropertyValue)
 
@@ -61,11 +130,10 @@ class EdiromVerovioRenderer extends HTMLElement {
 
   handlePropertyChange(property, newPropertyValue) {
 
-
     switch (property) {
       case 'zoom':
         this.zoom = parseInt(newPropertyValue);
-        this.setupOptions();
+        this.options['scale'] = this.zoom;
         this.tk?.setOptions(this.options);
         this.renderSVG();
         break;
@@ -78,69 +146,53 @@ class EdiromVerovioRenderer extends HTMLElement {
       case 'height':
       case 'width':
         this[property] = parseInt(newPropertyValue);
+        //this.debounce(, 50);
         this.updatePageDimensions();
-        this.setupOptions();
-        this.tk?.setOptions(this.options);
-        this.renderSVG();
+
         break;
 
       case 'meiurl':
         this.meiurl = newPropertyValue;
         this.fetchAndRenderMEI();
         break;
-
+/*
       case 'measurenumber':
         this.gotoMeasure(newPropertyValue);
         break;
+      
       case 'mdivname':
         this.mdivname = newPropertyValue;
         console.log("mdiv name is ", newPropertyValue)
         break;
+      
       case 'movementid':
         this.movementid = newPropertyValue;
         console.log("movement id is setted ")
         this.fetchAndRenderMEI(newPropertyValue)
-      case 'veroviowidth':
-
-        this.verovioWidth = newPropertyValue;
-        this.setupOptions();
-        //this.tk?.setOptions(this.options);
-        this.changeVerovioWidth(newPropertyValue);
-        console.log("this is the case for width 2")
-
-
-
+*/      
+      case 'pagewidth':
+        this.verovioWidth = parseInt(newPropertyValue);
+        if(!isNaN(this.verovioWidth) && this.verovioWidth >= 100 && this.verovioWidth <= 100000) {
+          this.options['pageWidth'] = this.verovioWidth;
+          this.tk?.setOptions(this.options);
+          this.tk?.loadData(this.meiData);
+          this.renderSVG();
+        }
         break;
-      case 'verovioheight':
-        console.log("this is the case for height 1")
 
-        this.verovioHeight = newPropertyValue;
-        this.setupOptions();
-        // this.tk?.setOptions(this.options);
-        this.changeVerovioHeight(newPropertyValue);
-        console.log("this is the case for height 2")
-
-
+      case 'pageheight':
+        this.verovioHeight = parseInt(newPropertyValue);
+        if(!isNaN(this.verovioHeight) && this.verovioHeight >= 100 && this.verovioHeight <= 60000) {
+          this.options['pageHeight'] = this.verovioHeight;
+          this.tk?.setOptions(this.options);
+          this.tk?.loadData(this.meiData);
+          this.renderSVG();
+        }
         break;
     }
 
   }
-  changeVerovioHeight(verovioHeight) {
-    let options = this.tk.getOptions();
-    options.pageHeight = verovioHeight;
-    this.tk.setOptions(options)
-    this.renderSVG();
-    console.log("update height")
 
-  }
-  changeVerovioWidth(verovioWidth) {
-    let options = this.tk.getOptions();
-    options.pageWidth = verovioWidth;
-    this.tk.setOptions(options)
-    this.renderSVG();
-    console.log("update width")
-
-  }
   gotoMeasure(measureNumber) {
     const measureId = this.getMeasureIdByNumber(measureNumber);
 
@@ -256,51 +308,40 @@ class EdiromVerovioRenderer extends HTMLElement {
     console.log("zoom is ", this.zoom);
     console.log("after assignement zoom is ", this.zoom)
   }
+
   updatePageDimensions() {
-    if (this.height != null) {
-      this.pageHeight = this.height * 100 / this.zoom;
+    
+    var timeout;
+	  var context = this;
+	  var later = function() {
+		  timeout = null;
+      console.log("Update page dimensions");
 
-    }
-    else {
-      this.pageHeight = this.verovioElement.clientHeight;
-    }
+      context.pageHeight = (context.height != null ? parseInt(context.height.toString().replaceAll("px", "")) * 100 / context.zoom : context.verovioElement?.clientHeight);
+      context.pageWidth = (context.width != null ? parseInt(context.width.toString().replaceAll("px", "")) * 100 / context.zoom : context.verovioElement?.clientWidth);
 
-    if (this.width != null) {
-      this.pageWidth = this.width * 100 / this.zoom;
-    }
-    else {
-      this.pageWidth = this.verovioElement.clientWidth;
-    }
+      context.options['pageHeight'] = parseInt(context.pageHeight);
+      context.options['pageWidth'] = parseInt(context.pageWidth);
+      context.tk?.setOptions(context.options);
 
-  }
-
-  setupOptions() {
-    this.options = {
-      breaks: "auto",
-      scale: 40, // fixed scale
-      spacingStaff: 7,
-      pageHeight: 4500, // fixed height
-      pageWidth: 4500,
-      svgAdditionalAttribute: ["note@pname", "note@oct"],
-      footer: "none",
-      header: "none",
-
-    };
-
-
-    console.log("Verovio Options:", this.options);
+      context.tk?.loadData(context.meiData);
+      context.renderSVG();
+	  };
+    
+	  clearTimeout(timeout);
+	  timeout = setTimeout(later, 100);
   }
 
   fetchAndRenderMEI() {
-    console.log("movement id is ", this.movementid);
+
     let url;
+
     if (this.movementid) {
       url = this.meiurl + "&movementId=" + this.movementid;
     } else {
       url = this.meiurl;
     }
 
-    console.log("url is hahaha ", url)
     fetch(url)
       .then((response) => response.text())
       .then((mei) => {
@@ -321,15 +362,13 @@ class EdiromVerovioRenderer extends HTMLElement {
       this.renderSVG();
     }
   }
+
   renderSVG() {
-    this.totalPages = this.tk.getPageCount();
-    this.pagenumber = parseInt(this.pagenumber)
-    this.pageNumber = (this.pagenumber != null && this.pagenumber !== '' && this.pagenumber >= 1 && this.pagenumber <= this.totalPages) ? this.pagenumber : this.pageNumber;
-    this.pagenumber = 0
+    this.totalPages = this.tk?.getPageCount();
+    this.pageNumber = (!isNaN(this.pageNumber) && !isNaN(this.totalPages) && this.pageNumber >= 1 && this.pagenumber <= this.totalPages) ? this.pageNumber : 1;
 
-    let svg = this.tk.renderToSVG(this.pageNumber);
+    let svg = this.tk?.renderToSVG(this.pageNumber);
     this.shadowRoot.getElementById("verovio-svg").innerHTML = svg;
-
 
     this.dispatchEvent(new CustomEvent('page-info-update', {
       detail: {
@@ -339,50 +378,7 @@ class EdiromVerovioRenderer extends HTMLElement {
       bubbles: true
     }));
   }
-
-  styleSVGElements() {
-    let rests = this.shadowRoot.querySelectorAll('g.rest');
-    for (let rest of rests) {
-      rest.style.fill = "dodgerblue";
-    }
-
-    let c5s = this.shadowRoot.querySelectorAll('g[data-pname="c"][data-oct="5"]');
-    for (let c5 of c5s) {
-      c5.style.fill = "aqua";
-    }
-
-    let verses = this.shadowRoot.querySelectorAll('g.verse');
-    for (let verse of verses) {
-      let attr = this.tk.getElementAttr(verse.id);
-      if (attr.n && attr.n > 1) verse.style.fill = "darkcyan";
-    }
-  }
-
-  setupResizeObserver() {
-    let resizeObserver = new ResizeObserver(() => {
-      this.updatePageDimensions();
-      this.setupOptions();
-      this.tk.setOptions(this.options);
-      this.fetchAndRenderMEI();
-    });
-    console.log("the screen i sresized")
-    resizeObserver.observe(this.verovioElement);
-  }
-
-  renderVerovio() {
-    const verovioScript = document.createElement('script');
-    verovioScript.src = "https://www.verovio.org/javascript/latest/verovio-toolkit-wasm.js";
-    verovioScript.defer = true;
-    this.shadowRoot.appendChild(verovioScript);
-    verovioScript.onload = () => {
-      verovio.module.onRuntimeInitialized = async () => {
-        this.tk = new verovio.toolkit();
-        this.setupOptions();
-        this.tk.setOptions(this.options);
-        this.fetchAndRenderMEI();
-        console.log("Verovio has loaded!");
-      };
-    };
-  }
 }
+
+/** Define the custom element */
 customElements.define('edirom-verovio-renderer', EdiromVerovioRenderer);
