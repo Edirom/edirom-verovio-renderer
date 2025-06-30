@@ -192,20 +192,20 @@ class EdiromVerovioRenderer extends HTMLElement {
         this.elementid = newPropertyValue;
         this.gotoElementId(newPropertyValue);
         break;
+
       case 'measurenumber':
         this.gotoMeasure(newPropertyValue);
         break;
-/*      
+      
       case 'mdivname':
         this.mdivname = newPropertyValue;
-        console.log("mdiv name is ", newPropertyValue)
+        this.gotoMdiv(newPropertyValue);
         break;
       
       case 'movementid':
         this.movementid = newPropertyValue;
-        console.log("movement id is setted ")
-        this.fetchAndRenderMEI(newPropertyValue)
-*/      
+        this.gotoElementId(newPropertyValue);
+      
       case 'pagewidth':
         this.verovioWidth = parseInt(newPropertyValue);
         if(!isNaN(this.verovioWidth) && this.verovioWidth >= 100 && this.verovioWidth <= 100000) {
@@ -246,39 +246,49 @@ class EdiromVerovioRenderer extends HTMLElement {
     }
   }
 
+  /**
+   * Navigates to the measure with the specified measure number.
+   * If the measure exists, scrolls to its corresponding element and logs the navigation.
+   * If not found, logs a warning to the console.
+   *
+   * @param {number|string} measureNumber - The number of the measure to navigate to.
+   */
   gotoMeasure(measureNumber) {
     const measureId = this.getMeasureIdByNumber(measureNumber);
 
     if (measureId) {
-      const page = this.tk.getPageWithElement(measureId);
-      if (page) {
-        this.pageNumber = page;
-        this.renderSVG();
-        console.log(`Navigated to measure ${measureNumber} on page ${page}`);
-      } else {
-        console.warn(`Page not found for measure ID: ${measureId}`);
-      }
+      this.gotoElementId(measureId);
+      console.log(`Navigated to measure with n="${measureNumber}" (ID: ${measureId})`);
     } else {
       console.warn(`Measure with n="${measureNumber}" not found`);
     }
   }
 
-  gotoMdiv(movementId) {
+  /**
+   * Navigates to a specific movement (mdiv) in the document based on the provided movement label.
+   *
+   * @param {string} movementLabel - The label or number identifying the movement to navigate to.
+   */
+  gotoMdiv(movementLabel) {
+    const mdivid = this.getMeasureIdByNumber(movementLabel);
 
-    console.log("movement id is ", movementId)
-    const page = this.tk.getPageWithElement(movementId);
-    console.log("page is ", page)
-
-    if (page) {
-      this.pageNumber = page;
-      this.renderSVG();
-      console.log(`Navigated to measure ${movementId} on page ${page}`);
+    if (mdivid) {
+      this.gotoElementId(mdivid);
+      console.log(`Navigated to movement with n="${movementLabel}" (ID: ${mdivid})`);
     } else {
-      console.warn(`Page not found for measure ID: ${movementId}`);
+      console.warn(`Movement with n="${movementLabel}" not found`);
     }
-
   }
 
+  /**
+   * Retrieves the XML ID of a <measure> element by its "n" attribute value.
+   *
+   * If a specific <mdiv> label is set in `this.mdivname`, the search is limited to that <mdiv>.
+   * Otherwise, the search is performed across all <measure> elements in the MEI document.
+   *
+   * @param {number|string} nValue - The value of the "n" attribute to match in <measure> elements.
+   * @returns {string|null} The "xml:id" attribute of the matching <measure>, or null if not found.
+   */
   getMeasureIdByNumber(nValue) {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(this.meiData, "application/xml");
@@ -310,39 +320,6 @@ class EdiromVerovioRenderer extends HTMLElement {
     console.warn(`No <measure n="${nValue}"> found ${this.mdivname ? `in <mdiv label="${this.mdivname}">` : "in the MEI file"}`);
     return null;
   }
-
-  getMeasureIdByNumber(nValue) {
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(this.meiData, "application/xml");
-
-    let measures;
-
-    if (this.mdivname) {
-      // Find the <mdiv> with the label attribute
-      const mdiv = xmlDoc.querySelector(`mdiv[xml:id="${this.mdivid}"]`);
-      if (!mdiv) {
-        console.warn(`No <mdiv> found with label="${this.mdivname}"`);
-        return null;
-      }
-
-      // Only search within this mdiv
-      measures = mdiv.querySelectorAll("measure");
-    } else {
-      // No mdiv specified, search all measures in the document
-      measures = xmlDoc.querySelectorAll("measure");
-    }
-
-    // Look for a measure with matching n value
-    for (let measure of measures) {
-      if (measure.getAttribute("n") === nValue.toString()) {
-        return measure.getAttribute("xml:id"); // Verovio needs this
-      }
-    }
-
-    console.warn(`No <measure n="${nValue}"> found ${this.mdivname ? `in <mdiv label="${this.mdivname}">` : "in the MEI file"}`);
-    return null;
-  }
-
   
   /**
    * Adjusts the zoom level of the renderer component.
