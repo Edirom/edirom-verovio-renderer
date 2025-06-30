@@ -18,6 +18,7 @@
  * @attribute {number} width - The width of the rendered page.
  * @attribute {string} verovio-url - The URL to the Verovio toolkit JS file.
  * @attribute {object|string} verovio-options - Options for Verovio rendering.
+ * @attribute {string} elementid - The element id to navigate to.
  * @attribute {string} measurenumber - The measure number to navigate to.
  * @attribute {string} mdivname - The name/label of the movement division.
  * @attribute {string} movementid - The XML ID of the movement to display.
@@ -105,7 +106,7 @@ class EdiromVerovioRenderer extends HTMLElement {
    * @returns {Array<string>} The list of observed attributes.
    */
   static get observedAttributes() {
-    return ['zoom', 'height', 'width', 'pagenumber', 'meiurl', 'measurenumber', 'mdivname', "movementid", "pagewidth", "pageheight", "verovio-url", "verovio-options"];
+    return ['zoom', 'height', 'width', 'pagenumber', 'meiurl', 'elementid', 'measurenumber', 'mdivname', "movementid", "pagewidth", "pageheight", "verovio-url", "verovio-options"];
   }
 
   /**
@@ -179,20 +180,22 @@ class EdiromVerovioRenderer extends HTMLElement {
       case 'height':
       case 'width':
         this[property] = parseInt(newPropertyValue);
-        //this.debounce(, 50);
         this.updatePageDimensions();
-
         break;
 
       case 'meiurl':
         this.meiurl = newPropertyValue;
         this.fetchAndRenderMEI();
         break;
-/*
+
+      case 'elementid':
+        this.elementid = newPropertyValue;
+        this.gotoElementId(newPropertyValue);
+        break;
       case 'measurenumber':
         this.gotoMeasure(newPropertyValue);
         break;
-      
+/*      
       case 'mdivname':
         this.mdivname = newPropertyValue;
         console.log("mdiv name is ", newPropertyValue)
@@ -224,6 +227,23 @@ class EdiromVerovioRenderer extends HTMLElement {
         break;
     }
 
+  }
+
+  /**
+   * Navigates to the page containing the specified element ID, updates the current page number,
+   * and re-renders the SVG. Logs the navigation action or warns if the element is not found.
+   *
+   * @param {string} elementId - The ID of the element to navigate to.
+   */
+  gotoElementId(elementId) {
+    const page = this.tk.getPageWithElement(elementId);
+    if (page) {
+      this.pageNumber = page;
+      this.renderSVG();
+      console.log(`Navigated to element with ID ${elementId} on page ${page}`);
+    } else {
+      console.warn(`Page not found for element ID: ${elementId}`);
+    }
   }
 
   gotoMeasure(measureNumber) {
