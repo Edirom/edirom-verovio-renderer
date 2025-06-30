@@ -1,7 +1,31 @@
 /**
- * Represents the EdiromVerovioRenderer custom element.
+ * Custom Web Component for rendering MEI files using the Verovio toolkit.
+ * 
+ * <edirom-verovio-renderer> provides an interface to load, render, and interact with MEI music notation files
+ * using the Verovio JavaScript toolkit. It supports dynamic attribute changes, zooming, page navigation,
+ * and measure/movement navigation.
+ * 
  * @class
  * @extends HTMLElement
+ * 
+ * @example
+ * <edirom-verovio-renderer meiurl="path/to/file.mei"></edirom-verovio-renderer>
+ * 
+ * @attribute {string} meiurl - The URL of the MEI file to render.
+ * @attribute {number} zoom - The zoom level (scale) for rendering.
+ * @attribute {number} pagenumber - The current page number to display.
+ * @attribute {number} height - The height of the rendered page.
+ * @attribute {number} width - The width of the rendered page.
+ * @attribute {string} verovio-url - The URL to the Verovio toolkit JS file.
+ * @attribute {object|string} verovio-options - Options for Verovio rendering.
+ * @attribute {string} measurenumber - The measure number to navigate to.
+ * @attribute {string} mdivname - The name/label of the movement division.
+ * @attribute {string} movementid - The XML ID of the movement to display.
+ * @attribute {number} pagewidth - The width of the rendered page in Verovio units.
+ * @attribute {number} pageheight - The height of the rendered page in Verovio units.
+ * 
+ * @fires communicate-[property]-update - Fired when a property is updated via attribute change.
+ * @fires page-info-update - Fired after rendering, with current page and total pages.
  */
 class EdiromVerovioRenderer extends HTMLElement {
  
@@ -46,6 +70,10 @@ class EdiromVerovioRenderer extends HTMLElement {
       `;
   }
 
+  
+  /**
+   * Lifecycle callback invoked when the custom element is added to the DOM.
+   */
   connectedCallback() {
 
     console.log("Edirom Verovio Renderer added to page.")
@@ -128,6 +156,11 @@ class EdiromVerovioRenderer extends HTMLElement {
 
   }
 
+  /**
+   * Handles property changes for the verovio rendering component.
+   * @param {string} property - The name of the property being changed.
+   * @param {any} newPropertyValue - The new value of the property.
+   */
   handlePropertyChange(property, newPropertyValue) {
 
     switch (property) {
@@ -209,6 +242,7 @@ class EdiromVerovioRenderer extends HTMLElement {
       console.warn(`Measure with n="${measureNumber}" not found`);
     }
   }
+
   gotoMdiv(movementId) {
 
     console.log("movement id is ", movementId)
@@ -224,7 +258,6 @@ class EdiromVerovioRenderer extends HTMLElement {
     }
 
   }
-
 
   getMeasureIdByNumber(nValue) {
     const parser = new DOMParser();
@@ -258,7 +291,6 @@ class EdiromVerovioRenderer extends HTMLElement {
     return null;
   }
 
-
   getMeasureIdByNumber(nValue) {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(this.meiData, "application/xml");
@@ -291,6 +323,16 @@ class EdiromVerovioRenderer extends HTMLElement {
     return null;
   }
 
+  
+  /**
+   * Adjusts the zoom level of the renderer component.
+   * 
+   * Increases or decreases the zoom value by 10 based on the provided type ("zoomUp" or "zoomDown").
+   * Ensures the zoom stays within the range of 10 to 100.
+   * Updates the rendering options and re-renders the SVG with the new zoom value.
+   * 
+   * @param {string} type - The type of zoom operation ("zoomUp" to increase, "zoomDown" to decrease).
+   */
   calculateZoom(type) {
     this.zoom = parseInt(this.zoom)
     this.zoom += type === "zoomUp" ? 10 : -10;
@@ -309,6 +351,13 @@ class EdiromVerovioRenderer extends HTMLElement {
     console.log("after assignement zoom is ", this.zoom)
   }
 
+  
+  /**
+   * Updates the page dimensions based on the current height, width, and zoom level.
+   * Calculates and sets the pageHeight and pageWidth properties, updates the options object,
+   * and triggers reloading and rendering of the MEI data.
+   * Uses a debounced approach to avoid excessive updates.
+   */
   updatePageDimensions() {
     
     var timeout;
@@ -327,11 +376,16 @@ class EdiromVerovioRenderer extends HTMLElement {
       context.tk?.loadData(context.meiData);
       context.renderSVG();
 	  };
-    
+
 	  clearTimeout(timeout);
 	  timeout = setTimeout(later, 100);
   }
 
+  /**
+   * Fetches MEI data from an URL (optionally including a movement ID),
+   * loads the MEI data into the toolkit, and renders the SVG.
+   * Handles errors that may occur during the fetch operation.
+   */
   fetchAndRenderMEI() {
 
     let url;
@@ -354,6 +408,12 @@ class EdiromVerovioRenderer extends HTMLElement {
       });
   }
 
+  /**
+   * Updates the current page number based on the navigation type ("next" or "previous"),
+   * ensuring it stays within the valid range [1, totalPages]. Triggers SVG rendering if the new page is valid.
+   *
+   * @param {string} type - The navigation type, either "next" to increment or "previous" to decrement the page number.
+   */
   calculatePageNumber(type) {
     console.log("page number is ", this.pageNumber)
     this.pageNumber += type === "next" ? 1 : -1;
@@ -363,6 +423,13 @@ class EdiromVerovioRenderer extends HTMLElement {
     }
   }
 
+  /**
+   * Renders the current page as SVG using the Verovio toolkit and updates the component's shadow DOM.
+   * Ensures the current page number is valid, updates the SVG content, and dispatches a 'page-info-update' event
+   * with the current page number and total number of pages.
+   *
+   * @fires CustomEvent#page-info-update - Dispatched after rendering, contains the current page number and total pages.
+   */
   renderSVG() {
     this.totalPages = this.tk?.getPageCount();
     this.pageNumber = (!isNaN(this.pageNumber) && !isNaN(this.totalPages) && this.pageNumber >= 1 && this.pagenumber <= this.totalPages) ? this.pageNumber : 1;
