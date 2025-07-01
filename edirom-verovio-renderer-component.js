@@ -94,7 +94,6 @@ class EdiromVerovioRenderer extends HTMLElement {
         break;
     }
   }
-
   chnageVerovioHeight(verovioHeight) {
     let options = this.tk.getOptions();
     options.pageHeight = verovioHeight;
@@ -125,13 +124,14 @@ class EdiromVerovioRenderer extends HTMLElement {
     if (page) {
       this.pageNumber = page;
       this.renderSVG();
-    }
-  }
 
+  }
+  }
   getMeasureIdByNumber(nValue) {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(this.meiData, "application/xml");
     let measures = this.mdivname ? xmlDoc.querySelector(`mdiv[label="${this.mdivname}"]`)?.querySelectorAll("measure") : xmlDoc.querySelectorAll("measure");
+
     for (let measure of measures) {
       if (measure.getAttribute("n") === nValue.toString()) {
         return measure.getAttribute("xml:id");
@@ -160,7 +160,7 @@ class EdiromVerovioRenderer extends HTMLElement {
   setupOptions() {
     this.options = {
       breaks: "auto",
-      scale: 40,
+      scale: 40, // fixed scale
       spacingStaff: 7,
       pageHeight: 4500,
       pageWidth: 4500,
