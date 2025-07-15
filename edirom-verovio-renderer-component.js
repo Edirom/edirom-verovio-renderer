@@ -109,45 +109,46 @@ class EdiromVerovioRenderer extends HTMLElement {
     return ['zoom', 'height', 'width', 'pagenumber', 'meiurl','elementid','measurenumber', 'backendurl', 'measurenumber', 'mdivname', 'movementid', 'veroviowidth', 'verovioheight', 'annotattion',  "pagewidth", "pageheight", "verovio-url", "verovio-options"];
   }
 
-  attributeChangedCallback(property, oldValue, newValue) {
-    this.set(property, newValue);
+  attributeChangedCallback(property, oldValue, newPropertyValue) {
+    this.set(property, newPropertyValue);
   }
 
-  set(property, newValue) {
-    this[property] = newValue;
+  set(property, newPropertyValue) {
+    this[property] = newPropertyValue;
     const event = new CustomEvent('communicate-' + property + '-update', {
-      detail: { [property]: newValue },
+      detail: { [property]: newPropertyValue },
       bubbles: true
     });
 
     this.dispatchEvent(event);
-    this.handlePropertyChange(property, newValue);
+    this.handlePropertyChange(property, newPropertyValue);
   }
 
-  handlePropertyChange(property, newValue) {
+  handlePropertyChange(property, newPropertyValue) {
     switch (property) {
       case 'zoom':
-        this.zoom = parseInt(newValue);
-        this.setupOptions();
+        this.zoom = parseInt(newPropertyValue);
+        this.options['scale'] = this.zoom;
         this.tk?.setOptions(this.options);
         this.renderSVG();
         break;
+
       case 'pagenumber':
-        this.pageNumber = parseInt(newValue);
+        this.pageNumber = parseInt(newPropertyValue);
         this.renderSVG();
         break;
       case 'annotattion':
         break;
       case 'height':
       case 'width':
-        this[property] = parseInt(newValue);
+        this[property] = parseInt(newPropertyValue);
         this.updatePageDimensions();
         this.setupOptions();
         this.tk?.setOptions(this.options);
         this.renderSVG();
         break;
       case 'meiurl':
-        this.meiurl = newValue;
+        this.meiurl = newPropertyValue;
         this.fetchAndRenderMEI();
         break;
       case 'elementid':
@@ -155,24 +156,24 @@ class EdiromVerovioRenderer extends HTMLElement {
         this.gotoElementId(newPropertyValue);
         break;
       case 'measurenumber':
-        this.gotoMeasure(newValue);
+        this.gotoMeasure(newPropertyValue);
         break;
       case 'mdivname':
-        this.mdivname = newValue;
+        this.mdivname = newPropertyValue;
         break;
       case 'movementid':
-        this.movementid = newValue;
-        this.fetchAndRenderMEI(newValue);
+        this.movementid = newPropertyValue;
+        this.fetchAndRenderMEI(newPropertyValue);
         break;
       case 'veroviowidth':
-        this.verovioWidth = newValue;
+        this.verovioWidth = newPropertyValue;
         this.setupOptions();
-        this.chnageVerovioWidth(newValue);
+        this.chnageVerovioWidth(newPropertyValue);
         break;
       case 'verovioheight':
-        this.verovioHeight = newValue;
+        this.verovioHeight = newPropertyValue;
         this.setupOptions();
-        this.chnageVerovioHeight(newValue);
+        this.chnageVerovioHeight(newPropertyValue);
         break;
       case 'pagewidth':
         this.verovioWidth = parseInt(newPropertyValue);
@@ -322,15 +323,21 @@ class EdiromVerovioRenderer extends HTMLElement {
    * @param {string} type - The type of zoom operation ("zoomUp" to increase, "zoomDown" to decrease).
    */
   calculateZoom(type) {
-    this.zoom = parseInt(this.zoom);
+    this.zoom = parseInt(this.zoom)
     this.zoom += type === "zoomUp" ? 10 : -10;
     this.zoom = Math.max(10, Math.min(this.zoom, 100));
     if (this.zoom <= 100) {
+      // Get the current options
       let options = this.tk.getOptions();
+      // Update the zoom value
       options.scale = this.zoom;
+      // Set the updated options
       this.tk.setOptions(options);
+      // Re-render the SVG with the updated options
       this.renderSVG();
     }
+    console.log("zoom is ", this.zoom);
+    console.log("after assignement zoom is ", this.zoom)
   }
 
   
@@ -379,14 +386,15 @@ class EdiromVerovioRenderer extends HTMLElement {
     }
 
     fetch(url)
-      .then((response) => response.text())
+     .then((response) => response.text())
       .then((mei) => {
         this.meiData = mei;
-        this.pageNumber = 1;
-        this.tk.loadData(mei);
-        this.renderSVG();
+        this.tk.loadData(mei); // Load MEI
+        this.renderSVG();      // Render
       })
-      .catch((error) => console.error("Error fetching MEI:", error));
+      .catch((error) => {
+        console.error("Error fetching MEI:", error);
+      });
   }
 
   /**
@@ -396,10 +404,13 @@ class EdiromVerovioRenderer extends HTMLElement {
    * @param {string} type - The navigation type, either "next" to increment or "previous" to decrement the page number.
    */
   calculatePageNumber(type) {
-    this.pageNumber += type === "next" ? 1 : -1;
-    this.pageNumber = Math.max(1, Math.min(this.pageNumber, this.totalPages));
-    if (this.pageNumber <= this.totalPages) this.renderSVG();
-  }
+      console.log("page number is ", this.pageNumber)
+      this.pageNumber += type === "next" ? 1 : -1;
+      this.pageNumber = Math.max(1, Math.min(this.pageNumber, this.totalPages));
+      if (this.pageNumber <= this.totalPages) {
+        this.renderSVG();
+      }
+    }
 
   /**
    * Renders the current page as SVG using the Verovio toolkit and updates the component's shadow DOM.
@@ -416,7 +427,10 @@ class EdiromVerovioRenderer extends HTMLElement {
     this.shadowRoot.getElementById("verovio-svg").innerHTML = svg;
 
     this.dispatchEvent(new CustomEvent('page-info-update', {
-      detail: { pageNumber: this.pageNumber, totalPages: this.totalPages },
+      detail: {
+        pageNumber: this.pageNumber,
+        totalPages: this.totalPages
+      },
       bubbles: true
     }));
   }
