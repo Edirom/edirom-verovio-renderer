@@ -106,7 +106,7 @@ class EdiromVerovioRenderer extends HTMLElement {
    * @returns {Array<string>} The list of observed attributes.
    */
   static get observedAttributes() {
-    return ['zoom', 'height', 'width', 'pagenumber', 'meiurl', 'elementid', 'measurenumber', 'mdivname', "movementid", "pagewidth", "pageheight", "verovio-url", "verovio-options"];
+    return ['zoom', 'height', 'width', 'pagenumber', 'meiurl','elementid','measurenumber', 'backendurl', 'measurenumber', 'mdivname', 'movementid', 'veroviowidth', 'verovioheight', 'annotattion',  'pagewidth', 'pageheight', 'verovio-url', 'verovio-options'];
   }
 
   /**
@@ -125,11 +125,8 @@ class EdiromVerovioRenderer extends HTMLElement {
    * @param {*} oldValue - The previous value of the attribute.
    * @param {*} newValue - The new value of the attribute.
    */
-  attributeChangedCallback(property, oldValue, newValue) {
-
-    // handle property change
-    this.set(property, newValue);
-    console.debug("property ", property, " is changed from '", oldValue, "' to '", newValue, "'");
+  attributeChangedCallback(property, oldValue, newPropertyValue) {
+    this.set(property, newPropertyValue);
   }
 
   /**
@@ -138,11 +135,7 @@ class EdiromVerovioRenderer extends HTMLElement {
    * @param {*} newPropertyValue - The new value to set for the property.
    */
   set(property, newPropertyValue) {
-
-    /** set internal and html properties */
     this[property] = newPropertyValue;
-
-    /** custom event for property update  */
     const event = new CustomEvent('communicate-' + property + '-update', {
       detail: { 
         element: this.tagName.toLowerCase(),
@@ -153,10 +146,8 @@ class EdiromVerovioRenderer extends HTMLElement {
     });
 
     this.dispatchEvent(event);
-    this.handlePropertyChange(property, newPropertyValue)
-
+    this.handlePropertyChange(property, newPropertyValue);
   }
-
   /**
    * Handles property changes for the verovio rendering component.
    * @param {string} property - The name of the property being changed.
@@ -177,7 +168,11 @@ class EdiromVerovioRenderer extends HTMLElement {
         this.renderSVG();
         break;
 
+      case 'annotattion':
+        break;
+
       case 'height':
+
       case 'width':
         this[property] = parseInt(newPropertyValue);
         this.updatePageDimensions();
@@ -196,16 +191,29 @@ class EdiromVerovioRenderer extends HTMLElement {
       case 'measurenumber':
         this.gotoMeasure(newPropertyValue);
         break;
-      
+
       case 'mdivname':
         this.mdivname = newPropertyValue;
         this.gotoMdiv(newPropertyValue);
         break;
-      
+
       case 'movementid':
         this.movementid = newPropertyValue;
-        this.gotoElementId(newPropertyValue);
-      
+        this.fetchAndRenderMEI();
+        break;
+
+      case 'veroviowidth':
+        this.verovioWidth = newPropertyValue;
+        this.setupOptions();
+        this.chnageVerovioWidth(newPropertyValue);
+        break;
+
+      case 'verovioheight':
+        this.verovioHeight = newPropertyValue;
+        this.setupOptions();
+        this.chnageVerovioHeight(newPropertyValue);
+        break;
+
       case 'pagewidth':
         this.verovioWidth = parseInt(newPropertyValue);
         if(!isNaN(this.verovioWidth) && this.verovioWidth >= 100 && this.verovioWidth <= 100000) {
@@ -226,10 +234,32 @@ class EdiromVerovioRenderer extends HTMLElement {
         }
         break;
     }
-
   }
-
-  /**
+  /** * Sets up the options for the Verovio toolkit based on the current properties.
+   * This method initializes the options object with values from the component's properties,
+   * ensuring that the toolkit is configured correctly for rendering.
+   * @param {number} verovioWidth - The width to set for the Verovio toolkit options.
+   * @returns {void}  
+   */
+  chnageVerovioHeight(verovioHeight) {
+    let options = this.tk.getOptions();
+    options.pageHeight = verovioHeight;
+    this.tk.setOptions(options);
+    this.renderSVG();
+  }
+  /** * Sets up the options for the Verovio toolkit based on the current properties.
+   * This method initializes the options object with values from the component's properties,
+   * ensuring that the toolkit is configured correctly for rendering.
+   * @param {number} verovioWidth - The width to set for the Verovio toolkit options.
+   * @returns {void}
+   */
+  chnageVerovioWidth(verovioWidth) {
+    let options = this.tk.getOptions();
+    options.pageWidth = verovioWidth;
+    this.tk.setOptions(options);
+    this.renderSVG();
+  }
+   /**
    * Navigates to the page containing the specified element ID, updates the current page number,
    * and re-renders the SVG. Logs the navigation action or warns if the element is not found.
    *
@@ -264,7 +294,7 @@ class EdiromVerovioRenderer extends HTMLElement {
     }
   }
 
-  /**
+ /**
    * Navigates to a specific movement (mdiv) in the document based on the provided movement label.
    *
    * @param {string} movementLabel - The label or number identifying the movement to navigate to.
@@ -394,7 +424,7 @@ class EdiromVerovioRenderer extends HTMLElement {
     }
 
     fetch(url)
-      .then((response) => response.text())
+     .then((response) => response.text())
       .then((mei) => {
         this.meiData = mei;
         this.tk.loadData(mei); // Load MEI
@@ -412,13 +442,13 @@ class EdiromVerovioRenderer extends HTMLElement {
    * @param {string} type - The navigation type, either "next" to increment or "previous" to decrement the page number.
    */
   calculatePageNumber(type) {
-    console.log("page number is ", this.pageNumber)
-    this.pageNumber += type === "next" ? 1 : -1;
-    this.pageNumber = Math.max(1, Math.min(this.pageNumber, this.totalPages));
-    if (this.pageNumber <= this.totalPages) {
-      this.renderSVG();
+      console.log("page number is ", this.pageNumber)
+      this.pageNumber += type === "next" ? 1 : -1;
+      this.pageNumber = Math.max(1, Math.min(this.pageNumber, this.totalPages));
+      if (this.pageNumber <= this.totalPages) {
+        this.renderSVG();
+      }
     }
-  }
 
   /**
    * Renders the current page as SVG using the Verovio toolkit and updates the component's shadow DOM.
