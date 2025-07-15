@@ -106,7 +106,7 @@ class EdiromVerovioRenderer extends HTMLElement {
    * @returns {Array<string>} The list of observed attributes.
    */
   static get observedAttributes() {
-    return ['zoom', 'height', 'width', 'pagenumber', 'meiurl','elementid','measurenumber', 'backendurl', 'measurenumber', 'mdivname', 'movementid', 'veroviowidth', 'verovioheight', 'annotattion',  "pagewidth", "pageheight", "verovio-url", "verovio-options"];
+    return ['zoom', 'height', 'width', 'pagenumber', 'meiurl','elementid','measurenumber', 'backendurl', 'measurenumber', 'mdivname', 'movementid', 'veroviowidth', 'verovioheight', 'annotattion',  'pagewidth', 'pageheight', 'verovio-url', 'verovio-options'];
   }
 
   /**
