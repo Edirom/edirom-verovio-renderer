@@ -109,10 +109,31 @@ class EdiromVerovioRenderer extends HTMLElement {
     return ['zoom', 'height', 'width', 'pagenumber', 'meiurl','elementid','measurenumber', 'backendurl', 'measurenumber', 'mdivname', 'movementid', 'veroviowidth', 'verovioheight', 'annotattion',  "pagewidth", "pageheight", "verovio-url", "verovio-options"];
   }
 
+  /**
+   * Invoked when the custom element is disconnected from the document's DOM.
+   */
+  disconnectedCallback() { }
+
+  /**
+   * Invoked when the custom element is moved to a new document.
+   */
+  adoptedCallback() { }
+
+  /**
+   * Invoked when one of the custom element's attributes is added, removed, or changed.
+   * @param {string} property - The name of the attribute that was changed.
+   * @param {*} oldValue - The previous value of the attribute.
+   * @param {*} newValue - The new value of the attribute.
+   */
   attributeChangedCallback(property, oldValue, newPropertyValue) {
     this.set(property, newPropertyValue);
   }
 
+  /**
+   * Sets the value of a global property and triggers property update events.
+   * @param {string} property - The name of the property to set.
+   * @param {*} newPropertyValue - The new value to set for the property.
+   */
   set(property, newPropertyValue) {
     this[property] = newPropertyValue;
     const event = new CustomEvent('communicate-' + property + '-update', {
@@ -123,7 +144,11 @@ class EdiromVerovioRenderer extends HTMLElement {
     this.dispatchEvent(event);
     this.handlePropertyChange(property, newPropertyValue);
   }
-
+  /**
+   * Handles property changes for the verovio rendering component.
+   * @param {string} property - The name of the property being changed.
+   * @param {any} newPropertyValue - The new value of the property.
+   */
   handlePropertyChange(property, newPropertyValue) {
     switch (property) {
       case 'zoom':
@@ -271,8 +296,7 @@ class EdiromVerovioRenderer extends HTMLElement {
     }
   }
 
-
- /**
+  /**
    * Retrieves the XML ID of a <measure> element by its "n" attribute value.
    *
    * If a specific <mdiv> label is set in `this.mdivname`, the search is limited to that <mdiv>.
