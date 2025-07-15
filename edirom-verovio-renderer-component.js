@@ -137,7 +137,11 @@ class EdiromVerovioRenderer extends HTMLElement {
   set(property, newPropertyValue) {
     this[property] = newPropertyValue;
     const event = new CustomEvent('communicate-' + property + '-update', {
-      detail: { [property]: newPropertyValue },
+      detail: { 
+        element: this.tagName.toLowerCase(),
+        property: property,
+        value: newPropertyValue
+      },
       bubbles: true
     });
 
@@ -150,6 +154,7 @@ class EdiromVerovioRenderer extends HTMLElement {
    * @param {any} newPropertyValue - The new value of the property.
    */
   handlePropertyChange(property, newPropertyValue) {
+
     switch (property) {
       case 'zoom':
         this.zoom = parseInt(newPropertyValue);
@@ -162,44 +167,52 @@ class EdiromVerovioRenderer extends HTMLElement {
         this.pageNumber = parseInt(newPropertyValue);
         this.renderSVG();
         break;
+
       case 'annotattion':
         break;
+
       case 'height':
+
       case 'width':
         this[property] = parseInt(newPropertyValue);
         this.updatePageDimensions();
-        this.setupOptions();
-        this.tk?.setOptions(this.options);
-        this.renderSVG();
         break;
+
       case 'meiurl':
         this.meiurl = newPropertyValue;
         this.fetchAndRenderMEI();
         break;
+
       case 'elementid':
         this.elementid = newPropertyValue;
         this.gotoElementId(newPropertyValue);
         break;
+
       case 'measurenumber':
         this.gotoMeasure(newPropertyValue);
         break;
+
       case 'mdivname':
         this.mdivname = newPropertyValue;
         break;
+
       case 'movementid':
         this.movementid = newPropertyValue;
         this.fetchAndRenderMEI(newPropertyValue);
         break;
+
       case 'veroviowidth':
         this.verovioWidth = newPropertyValue;
         this.setupOptions();
         this.chnageVerovioWidth(newPropertyValue);
         break;
+
       case 'verovioheight':
         this.verovioHeight = newPropertyValue;
         this.setupOptions();
         this.chnageVerovioHeight(newPropertyValue);
         break;
+        
       case 'pagewidth':
         this.verovioWidth = parseInt(newPropertyValue);
         if(!isNaN(this.verovioWidth) && this.verovioWidth >= 100 && this.verovioWidth <= 100000) {
