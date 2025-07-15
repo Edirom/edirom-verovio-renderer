@@ -194,11 +194,12 @@ class EdiromVerovioRenderer extends HTMLElement {
 
       case 'mdivname':
         this.mdivname = newPropertyValue;
+        this.gotoMdiv(newPropertyValue);
         break;
 
       case 'movementid':
         this.movementid = newPropertyValue;
-        this.fetchAndRenderMEI(newPropertyValue);
+        this.fetchAndRenderMEI();
         break;
 
       case 'veroviowidth':
@@ -212,7 +213,7 @@ class EdiromVerovioRenderer extends HTMLElement {
         this.setupOptions();
         this.chnageVerovioHeight(newPropertyValue);
         break;
-        
+
       case 'pagewidth':
         this.verovioWidth = parseInt(newPropertyValue);
         if(!isNaN(this.verovioWidth) && this.verovioWidth >= 100 && this.verovioWidth <= 100000) {
