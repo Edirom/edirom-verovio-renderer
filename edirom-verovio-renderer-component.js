@@ -85,15 +85,11 @@ class EdiromVerovioRenderer extends HTMLElement {
    */
   connectedCallback() {
 
-    console.log("Edirom Verovio Renderer added to page.")
-
     /** load the verovio library */
     import(this.veroviourl)
       .then((module) => {
         verovio.module.onRuntimeInitialized = () => {
           this.tk = new verovio.toolkit();
-          console.log("Verovio version " + this.tk.getVersion() + " has been loaded!");
-
           /** set rendering options for verovio */
           this.tk.setOptions(this.options);
 
@@ -114,7 +110,7 @@ class EdiromVerovioRenderer extends HTMLElement {
    * @returns {Array<string>} The list of observed attributes.
    */
   static get observedAttributes() {
-    return ['zoom', 'height', 'width', 'pagenumber', 'meiurl', 'elementid', 'measurenumber', 'mdivname', "movementid", "pagewidth", "pageheight", "verovio-url", "verovio-options", "enable-measure-shadow"];
+    return ['zoom', 'height', 'width', 'pagenumber', 'meiurl', 'elementid', 'measurenumber', 'mdivname', "movementid", "pagewidth", "pageheight", "verovio-url", "verovio-options"];
   }
 
   /**
@@ -137,7 +133,6 @@ class EdiromVerovioRenderer extends HTMLElement {
 
     // handle property change
     this.set(property, newValue);
-    console.debug("property ", property, " is changed from '", oldValue, "' to '", newValue, "'");
   }
 
   /**
@@ -248,10 +243,7 @@ class EdiromVerovioRenderer extends HTMLElement {
     if (page) {
       this.pageNumber = page;
       this.renderSVG();
-      console.log(`Navigated to element with ID ${elementId} on page ${page}`);
-    } else {
-      console.warn(`Page not found for element ID: ${elementId}`);
-    }
+    } 
   }
 
   /**
@@ -266,7 +258,6 @@ class EdiromVerovioRenderer extends HTMLElement {
 
     if (measureId) {
       this.gotoElementId(measureId);
-      console.log(`Navigated to measure with n="${measureNumber}" (ID: ${measureId})`);
     } else {
       console.warn(`Measure with n="${measureNumber}" not found`);
     }
@@ -282,7 +273,6 @@ class EdiromVerovioRenderer extends HTMLElement {
 
     if (mdivid) {
       this.gotoElementId(mdivid);
-      console.log(`Navigated to movement with n="${movementLabel}" (ID: ${mdivid})`);
     } else {
       console.warn(`Movement with n="${movementLabel}" not found`);
     }
@@ -352,8 +342,6 @@ class EdiromVerovioRenderer extends HTMLElement {
       // Re-render the SVG with the updated options
       this.renderSVG();
     }
-    console.log("zoom is ", this.zoom);
-    console.log("after assignement zoom is ", this.zoom)
   }
 
   
@@ -369,8 +357,6 @@ class EdiromVerovioRenderer extends HTMLElement {
 	  var context = this;
 	  var later = function() {
 		  timeout = null;
-      console.log("Update page dimensions");
-
       context.pageHeight = (context.height != null ? parseInt(context.height.toString().replaceAll("px", "")) * 100 / context.zoom : context.verovioElement?.clientHeight);
       context.pageWidth = (context.width != null ? parseInt(context.width.toString().replaceAll("px", "")) * 100 / context.zoom : context.verovioElement?.clientWidth);
 
@@ -420,7 +406,6 @@ class EdiromVerovioRenderer extends HTMLElement {
    * @param {string} type - The navigation type, either "next" to increment or "previous" to decrement the page number.
    */
   calculatePageNumber(type) {
-    console.log("page number is ", this.pageNumber)
     this.pageNumber += type === "next" ? 1 : -1;
     this.pageNumber = Math.max(1, Math.min(this.pageNumber, this.totalPages));
     if (this.pageNumber <= this.totalPages) {
@@ -443,7 +428,6 @@ class EdiromVerovioRenderer extends HTMLElement {
     this.shadowRoot.getElementById("verovio-svg").innerHTML = svg;
 
     // Setup annotation hover effects after SVG is rendered
-    console.log("Setting up annotation hover effects function calls");
     this.setupAnnotationHoverEffects();
 
     this.dispatchEvent(new CustomEvent('page-info-update', {
@@ -459,7 +443,6 @@ class EdiromVerovioRenderer extends HTMLElement {
    * Sets up hover effects for annotation elements if enable-measure-shadow attribute is true
    */
   setupAnnotationHoverEffects() {
-    console.log("Setting up annotation hover effects ");
     // Check if measure shadow effect is enabled
     if (this.getAttribute('enable-measure-shadow') !== 'true') {
       return;
@@ -467,23 +450,19 @@ class EdiromVerovioRenderer extends HTMLElement {
 
     // Find all annotation elements in the rendered SVG
     const annotations = this.shadowRoot.querySelectorAll('.annot.editorialComment:not(.bounding-box), .annot.annotRef:not(.bounding-box)');
-    console.log("Setting up annotation hover effects ", annotations);
 
     annotations.forEach((annot) => {
       const measure = annot.closest('.measure');
        measure.classList.add('annotation-hover');
       if (!measure) return;
-      console.log("Found annotation:", annot);
 
       // Add hover effect
       annot.addEventListener('mouseover', () => {
-        console.log("Mouse entered annotation:", annot);
         measure.classList.add('annotation-hover');
       });
 
       // Remove hover effect
       annot.addEventListener('mouseleave', () => {
-        console.log("Mouse left annotation:", annot);
         measure.classList.remove('annotation-hover');
       });
     });
