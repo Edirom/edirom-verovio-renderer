@@ -60,23 +60,7 @@ class EdiromVerovioRenderer extends HTMLElement {
     this.zoom = this.getAttribute("zoom") || 20;
     this.pageNumber = this.getAttribute("pagenumber") || 1;
 
-    this.shadowRoot.innerHTML += `
-      <style>
-          #verovio-svg {
-              margin-bottom: 30%; /* Adjust to ensure SVG content doesn't overlap with header */
-              
-          }
-          /* Measure shadow effect when annotation hovered */
-          .annotation-hover {
-              box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, 
-                          rgba(0, 0, 0, 0.12) 0px -12px 30px, 
-                          rgba(0, 0, 0, 0.12) 0px 4px 6px, 
-                          rgba(0, 0, 0, 0.17) 0px 12px 13px, 
-                          rgba(0, 0, 0, 0.09) 0px -3px 5px;
-          }
-      </style>
-      <div id="verovio-svg"></div>
-      `;
+    this.shadowRoot.innerHTML += `<div id="verovio-svg"></div>`;
   }
 
   
@@ -427,9 +411,6 @@ class EdiromVerovioRenderer extends HTMLElement {
     let svg = this.tk?.renderToSVG(this.pageNumber);
     this.shadowRoot.getElementById("verovio-svg").innerHTML = svg;
 
-    // Setup annotation hover effects after SVG is rendered
-    this.setupAnnotationHoverEffects();
-
     this.dispatchEvent(new CustomEvent('page-info-update', {
       detail: {
         pageNumber: this.pageNumber,
@@ -437,35 +418,6 @@ class EdiromVerovioRenderer extends HTMLElement {
       },
       bubbles: true
     }));
-  }
-
-  /**
-   * Sets up hover effects for annotation elements if enable-measure-shadow attribute is true
-   */
-  setupAnnotationHoverEffects() {
-    // Check if measure shadow effect is enabled
-    if (this.getAttribute('enable-measure-shadow') !== 'true') {
-      return;
-    }
-
-    // Find all annotation elements in the rendered SVG
-    const annotations = this.shadowRoot.querySelectorAll('.annot.editorialComment:not(.bounding-box), .annot.annotRef:not(.bounding-box)');
-
-    annotations.forEach((annot) => {
-      const measure = annot.closest('.measure');
-       measure.classList.add('annotation-hover');
-      if (!measure) return;
-
-      // Add hover effect
-      annot.addEventListener('mouseover', () => {
-        measure.classList.add('annotation-hover');
-      });
-
-      // Remove hover effect
-      annot.addEventListener('mouseleave', () => {
-        measure.classList.remove('annotation-hover');
-      });
-    });
   }
 }
 
