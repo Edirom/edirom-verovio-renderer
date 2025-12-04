@@ -120,17 +120,6 @@ All attributes are strings. The component automatically converts values to the a
 
 The component dispatches custom events for state changes and updates.
 
-#### `communicate-{property}-update`
-
-Fired when any attribute is changed via `setAttribute()`.
-
-```javascript
-renderer.addEventListener('communicate-zoom-update', (event) => {
-  console.log('Zoom changed to:', event.detail.value);
-  // event.detail = { element: 'edirom-verovio-renderer', property: 'zoom', value: '50' }
-});
-```
-
 #### `page-info-update`
 
 Fired after rendering with current page information.
