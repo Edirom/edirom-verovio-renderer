@@ -2,76 +2,215 @@
 
 # Edirom Verovio Renderer Component
 
-This web component renders and append svg rendring of MEI file using verovio library. It is intended to be used in tbe Edirom Online, but can also be (re-)used in other web applications. No compilation or building is necessary to use the web component. 
-The component uses (https://www.verovio.org/index.xhtml) library. 
-Note: This repository only contains the bare JavaScript-based component, there is a separate [demo suite](https://github.com/Edirom/edirom-web-components-demonstrator) for web components developed in the Edirom Online Reloaded project, where the component can be seen and tested.
+A lightweight web component that renders MEI (Music Encoding Initiative) files as SVG using the [Verovio library](https://www.verovio.org/index.xhtml). Designed for integration with [Edirom Online](http://www.edirom.de), it can also be used as a standalone component in any web application. No compilation or build process required.
+
+**Note:** This repository contains the core JavaScript component. For demonstrations and examples, see the [Edirom Web Components Demonstrator](https://github.com/Edirom/edirom-web-components-demonstrator).
+
+## Features
+
+- **MEI Rendering**: Full support for MEI file rendering via Verovio toolkit
+- **Page Navigation**: Navigate through multi-page scores
+- **Zoom Control**: Adjustable zoom levels (10-100%)
+- **Element Navigation**: Jump to specific measures, movements, or XML elements
+- **Multi-Movement Support**: Navigate between movements (mdiv sections)
+- **Customizable Options**: Full access to Verovio rendering options
+- **Dynamic Updates**: Reactive attribute-based API
+- **Event System**: Custom events for state changes and page updates
+
+## License
+
+- **edirom-verovio-renderer**: GPL-3.0
+- **Verovio library**: LGPL-3.0, GPL-3.0
 
 
-## Licensea
+## Installation & Usage
 
-The edirom-verovio-renderer.js comes with the license GPL-3.0. 
-
-The imported verovio library comes with the license  LGPL-3.0, GPL-3.0.
-
-
-## How to use this web component
-
-1. Clone the repository into a directory of your choice
-2. Include the path to the web component's JavaScript file into the `<head>` an HTML page
-```html
-<script src="path/to/edirom-verovio-renderer.js"></script>
-```
-3. Include a custom element (this is specified and can be processed by the component) into the `<body>` of the HTML page. The attributes of the custom element are used as parameters at initialization of the component and changing them (manually or programmatically) can control the components state and behaviour during runtime. The state changes of the web component are communicated outwards via custom events (called 'communicate-{change-type}-update'). The component/document that instantiates the web component (its parent) can listen (via event listeners which have to be implemented individually) and react to the communicated state changes if necessary. The separation of inward communication (via custom element's attributes) and outward communication (via custom events) is esp. necessary to handle frequently populated information like currentTime of the audio player and avoid interference between reading and writing info about the component's state.
-
-```html
-<edirom-verovio-renderer
-            meiurl="https://editor.verovio.org/examples/puccini.mei"
-            pagenumber="1"
-            elementid=""
-            measurenumber=""
-            mdivname=""
-            movementid=""
-            zoom="20"
-            height="500px"
-            width="500px"
-            pagewidth=""
-            pageheight=""
-            verovio-url="https://www.verovio.org/javascript/5.3.2/verovio-toolkit-wasm.js"
-            verovio-options="{
-                breaks: 'auto',
-                scale: 20,
-                spacingStaff: 7,
-                pageHeight: 4500,
-                pageWidth: 4500,
-                footer: 'none',
-                header: 'none'
-            }"
-        ></edirom-verovio-renderer>
+### 1. Clone the Repository
+```bash
+git clone https://github.com/Edirom/edirom-verovio-renderer.git
+cd edirom-verovio-renderer
 ```
 
+### 2. Include in Your HTML
 
-### Parameters
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MEI Viewer</title>
+    <script type="module" src="path/to/edirom-verovio-renderer-component.js"></script>
+</head>
+<body>
+    <edirom-verovio-renderer
+        meiurl="https://www.verovio.org/examples/downloads/Schubert_Lindenbaum.mei"
+        zoom="40"
+        width="800px"
+        height="1000px">
+    </edirom-verovio-renderer>
+</body>
+</html>
+```
 
-_Note: All attribute values are strings internally, the data type information below indicates the necessary format of the attribute value._
+### 3. Customize via Attributes
 
-The verovio parameters mentioned below are based on the available [Verovio library](https://www.verovio.org/index.xhtml). 
+The component uses HTML attributes for configuration. Change attributes programmatically to control the component:
+
+```javascript
+const renderer = document.querySelector('edirom-verovio-renderer');
+
+// Navigate to page 2
+renderer.setAttribute('pagenumber', '2');
+
+// Jump to measure 10
+renderer.setAttribute('measurenumber', '10');
+
+// Adjust zoom
+renderer.setAttribute('zoom', '60');
+``` 
+
+## API Reference
 
 ### Attributes
 
-_Note: All attribute values are internally handled as strings. The data type below reflects the expected format._
+All attributes are strings. The component automatically converts values to the appropriate type.
 
-These attributes control how the component renders MEI data using the [Verovio library](https://www.verovio.org/index.xhtml):
+#### Core Rendering Attributes
 
-| Attribute        | Type     | Description                                                                 | Default                                                                 |
-|------------------|----------|-----------------------------------------------------------------------------|-------------------------------------------------------------------------|
-| `width`          | Integer  | Width of the rendered SVG (in pixels)                                       | `"200"`                                                                 |
-| `height`         | Integer  | Height of the rendered SVG (in pixels)                                      | `"700"`                                                                 |
-| `zoom`           | Integer  | Zoom level (Verovio scale percentage)                                       | `"20"`                                                                  |
-| `pagenumber`     | Integer  | Page number to be displayed                                                 | `"1"`                                                                   |
-| `meiurl`         | String   | URL to the source MEI file                                                  | `"https://www.verovio.org/examples/downloads/Schubert_Lindenbaum.mei"`  |
-| `measurenumber`  | Integer  | (Optional) Navigate to a specific measure number (if found)                 | —                                                                       |
-| `mdivname`       | String   | (Optional) Lookup to a specific `<mdiv>` with this label                    | —                                                                       |
-| `movementid`     | String   | (Optional) Navigate to a specific movement with this id                     | —                                                                       |
-| `elementid`      | String   | (Optional) Navigate to any element with this id                             | —                                                                       |
-| `verovio-url`    | String   | (Optional) Provide a specific URL for the verovio library                   | `"https://www.verovio.org/javascript/5.3.2/verovio-toolkit-wasm.js"`    |
-| `verovio-options`| Object   | (Optional) An object with options for verovio                               | `"{breaks: "auto", scale: 20, spacingStaff: 7, pageHeight: 4500, pageWidth: 4500, footer: "none", header: "none"}"`|
+| Attribute | Type | Description | Default |
+|-----------|------|-------------|---------|
+| `meiurl` | String | URL to the MEI file to render | `"https://www.verovio.org/examples/downloads/Schubert_Lindenbaum.mei"` |
+| `width` | String | Component width (with units, e.g., "800px") | `"200px"` |
+| `height` | String | Component height (with units, e.g., "1000px") | `"700px"` |
+| `zoom` | Number | Zoom level / Verovio scale (10-100) | `20` |
+| `pagenumber` | Number | Current page to display | `1` |
+
+#### Navigation Attributes
+
+| Attribute | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `measurenumber` | Number/String | Navigate to a specific measure by its `@n` attribute | `"10"` |
+| `elementid` | String | Navigate to any element by its `@xml:id` | `"note-123"` |
+| `movementid` | String | Navigate to a movement by its `@xml:id` | `"movement-02"` |
+| `mdivname` | String | Navigate to an mdiv by its `@label` attribute | `"First Movement"` |
+
+#### Verovio Configuration
+
+| Attribute | Type | Description | Default |
+|-----------|------|-------------|---------|
+| `verovio-url` | String | URL to Verovio toolkit JavaScript file | `"https://www.verovio.org/javascript/5.3.2/verovio-toolkit-wasm.js"` |
+| `verovio-options` | Object/String | Verovio toolkit options (JSON string or object) | See below |
+| `pagewidth` | Number | Page width in Verovio units (100-100000) | Calculated from `width` and `zoom` |
+| `pageheight` | Number | Page height in Verovio units (100-60000) | Calculated from `height` and `zoom` |
+
+#### Default Verovio Options
+
+```javascript
+{
+  breaks: "auto",
+  scale: 20,
+  spacingStaff: 7,
+  pageHeight: 4500,
+  pageWidth: 4500,
+  footer: "none",
+  header: "none"
+}
+```
+
+### Events
+
+The component dispatches custom events for state changes and updates.
+
+#### `communicate-{property}-update`
+
+Fired when any attribute is changed via `setAttribute()`.
+
+```javascript
+renderer.addEventListener('communicate-zoom-update', (event) => {
+  console.log('Zoom changed to:', event.detail.value);
+  // event.detail = { element: 'edirom-verovio-renderer', property: 'zoom', value: '50' }
+});
+```
+
+#### `page-info-update`
+
+Fired after rendering with current page information.
+
+```javascript
+renderer.addEventListener('page-info-update', (event) => {
+  console.log(`Page ${event.detail.pageNumber} of ${event.detail.totalPages}`);
+});
+```
+
+### Methods
+
+While the component is primarily controlled via attributes, you can also access these methods:
+
+```javascript
+const renderer = document.querySelector('edirom-verovio-renderer');
+
+// Navigate to next/previous page
+renderer.calculatePageNumber('next');
+renderer.calculatePageNumber('previous');
+
+// Zoom in/out
+renderer.calculateZoom('zoomUp');   // +10%
+renderer.calculateZoom('zoomDown'); // -10%
+
+// Navigate to specific element
+renderer.gotoElementId('measure-042');
+renderer.gotoMeasure(15);
+renderer.gotoMdiv('Allegro');
+```
+
+## Browser Compatibility
+
+- Modern browsers with ES6 module support
+- Chrome/Edge 61+
+- Firefox 60+
+- Safari 11+
+
+## Development
+
+### Running Locally
+
+```bash
+# Clone the repository
+git clone https://github.com/Edirom/edirom-verovio-renderer.git
+cd edirom-verovio-renderer
+
+# Start a local server (Python example)
+python3 -m http.server 8080
+
+# Open in browser
+# http://localhost:8080/demo-interactive-api.html
+```
+
+## Contributing
+
+Contributions are welcome! Please read our [Code of Conduct](CODE_OF_CONDUCT.md) first.
+
+
+## Citation
+
+
+See [CITATION.cff](CITATION.cff) for more details.
+
+## Links
+
+- [Edirom Online](http://www.edirom.de)
+- [Verovio Documentation](https://www.verovio.org/index.xhtml)
+- [MEI (Music Encoding Initiative)](https://music-encoding.org/)
+- [Edirom Web Components Demonstrator](https://github.com/Edirom/edirom-web-components-demonstrator)
+
+## Support
+
+For issues and feature requests, please use the [GitHub issue tracker](https://github.com/Edirom/edirom-verovio-renderer/issues).
+
+## License
+
+GPL-3.0 License - see [LICENSE](LICENSE) file for details.
+
+---
+
+**Developed by** [The Edirom Project](http://www.edirom.de) • **Powered by** [Verovio](https://www.verovio.org/)
+
