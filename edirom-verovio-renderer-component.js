@@ -60,15 +60,7 @@ class EdiromVerovioRenderer extends HTMLElement {
     this.zoom = this.getAttribute("zoom") || 20;
     this.pageNumber = this.getAttribute("pagenumber") || 1;
 
-    this.shadowRoot.innerHTML += `
-      <style>
-          #verovio-svg {
-              margin-bottom: 30%; /* Adjust to ensure SVG content doesn't overlap with header */
-              
-          }
-      </style>
-      <div id="verovio-svg"></div>
-      `;
+    this.shadowRoot.innerHTML += `<div id="verovio-svg"></div>`;
   }
 
   
@@ -77,15 +69,11 @@ class EdiromVerovioRenderer extends HTMLElement {
    */
   connectedCallback() {
 
-    console.log("Edirom Verovio Renderer added to page.")
-
     /** load the verovio library */
     import(this.veroviourl)
       .then((module) => {
         verovio.module.onRuntimeInitialized = () => {
           this.tk = new verovio.toolkit();
-          console.log("Verovio version " + this.tk.getVersion() + " has been loaded!");
-
           /** set rendering options for verovio */
           this.tk.setOptions(this.options);
 
@@ -129,7 +117,6 @@ class EdiromVerovioRenderer extends HTMLElement {
 
     // handle property change
     this.set(property, newValue);
-    console.debug("property ", property, " is changed from '", oldValue, "' to '", newValue, "'");
   }
 
   /**
@@ -240,10 +227,7 @@ class EdiromVerovioRenderer extends HTMLElement {
     if (page) {
       this.pageNumber = page;
       this.renderSVG();
-      console.log(`Navigated to element with ID ${elementId} on page ${page}`);
-    } else {
-      console.warn(`Page not found for element ID: ${elementId}`);
-    }
+    } 
   }
 
   /**
@@ -258,7 +242,6 @@ class EdiromVerovioRenderer extends HTMLElement {
 
     if (measureId) {
       this.gotoElementId(measureId);
-      console.log(`Navigated to measure with n="${measureNumber}" (ID: ${measureId})`);
     } else {
       console.warn(`Measure with n="${measureNumber}" not found`);
     }
@@ -274,7 +257,6 @@ class EdiromVerovioRenderer extends HTMLElement {
 
     if (mdivid) {
       this.gotoElementId(mdivid);
-      console.log(`Navigated to movement with n="${movementLabel}" (ID: ${mdivid})`);
     } else {
       console.warn(`Movement with n="${movementLabel}" not found`);
     }
@@ -344,8 +326,6 @@ class EdiromVerovioRenderer extends HTMLElement {
       // Re-render the SVG with the updated options
       this.renderSVG();
     }
-    console.log("zoom is ", this.zoom);
-    console.log("after assignement zoom is ", this.zoom)
   }
 
   
@@ -361,8 +341,6 @@ class EdiromVerovioRenderer extends HTMLElement {
 	  var context = this;
 	  var later = function() {
 		  timeout = null;
-      console.log("Update page dimensions");
-
       context.pageHeight = (context.height != null ? parseInt(context.height.toString().replaceAll("px", "")) * 100 / context.zoom : context.verovioElement?.clientHeight);
       context.pageWidth = (context.width != null ? parseInt(context.width.toString().replaceAll("px", "")) * 100 / context.zoom : context.verovioElement?.clientWidth);
 
@@ -412,7 +390,6 @@ class EdiromVerovioRenderer extends HTMLElement {
    * @param {string} type - The navigation type, either "next" to increment or "previous" to decrement the page number.
    */
   calculatePageNumber(type) {
-    console.log("page number is ", this.pageNumber)
     this.pageNumber += type === "next" ? 1 : -1;
     this.pageNumber = Math.max(1, Math.min(this.pageNumber, this.totalPages));
     if (this.pageNumber <= this.totalPages) {
