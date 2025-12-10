@@ -154,8 +154,19 @@ class EdiromVerovioRenderer extends HTMLElement {
     switch (property) {
       case 'zoom':
         this.zoom = parseInt(newPropertyValue);
+        // Calculate base dimensions from container or attributes
+        let baseHeight = this.height ? parseInt(this.height.toString().replace(/px|%/g, "")) : this.verovioElement?.clientHeight || 800;
+        let baseWidth = this.width ? (this.width.toString().includes('%') ? this.verovioElement?.clientWidth : parseInt(this.width.toString().replace(/px|%/g, ""))) : this.verovioElement?.clientWidth || 1200;
+        
+        // Adjust page dimensions inversely to zoom (scale / 100 gives the factor)
+        // Higher zoom = smaller page dimensions, Lower zoom = larger page dimensions
+        let scaleFactor = this.zoom / 100;
         this.options['scale'] = this.zoom;
+        this.options['pageHeight'] = Math.round(baseHeight / scaleFactor);
+        this.options['pageWidth'] = Math.round(baseWidth / scaleFactor);
+        
         this.tk?.setOptions(this.options);
+        this.tk?.loadData(this.meiData);
         this.renderSVG();
         break;
 
@@ -341,8 +352,12 @@ class EdiromVerovioRenderer extends HTMLElement {
 	  var context = this;
 	  var later = function() {
 		  timeout = null;
-      context.pageHeight = (context.height != null ? parseInt(context.height.toString().replaceAll("px", "")) * 100 / context.zoom : context.verovioElement?.clientHeight);
-      context.pageWidth = (context.width != null ? parseInt(context.width.toString().replaceAll("px", "")) * 100 / context.zoom : context.verovioElement?.clientWidth);
+      // Calculate dimensions - handle both px and % values
+      let heightValue = context.height ? parseInt(context.height.toString().replace(/px|%/g, "")) : context.verovioElement?.clientHeight || 800;
+      let widthValue = context.width ? (context.width.toString().includes('%') ? context.verovioElement?.clientWidth : parseInt(context.width.toString().replace(/px|%/g, ""))) : context.verovioElement?.clientWidth || 1200;
+      
+      context.pageHeight = heightValue * 100 / context.zoom;
+      context.pageWidth = widthValue * 100 / context.zoom;
 
       context.options['pageHeight'] = parseInt(context.pageHeight);
       context.options['pageWidth'] = parseInt(context.pageWidth);
@@ -406,7 +421,7 @@ class EdiromVerovioRenderer extends HTMLElement {
    */
   renderSVG() {
     this.totalPages = this.tk?.getPageCount();
-    this.pageNumber = (!isNaN(this.pageNumber) && !isNaN(this.totalPages) && this.pageNumber >= 1 && this.pagenumber <= this.totalPages) ? this.pageNumber : 1;
+    this.pageNumber = (!isNaN(this.pageNumber) && !isNaN(this.totalPages) && this.pageNumber >= 1 && this.pageNumber <= this.totalPages) ? this.pageNumber : 1;
 
     let svg = this.tk?.renderToSVG(this.pageNumber);
     this.shadowRoot.getElementById("verovio-svg").innerHTML = svg;
