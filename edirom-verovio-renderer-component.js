@@ -47,7 +47,7 @@ class EdiromVerovioRenderer extends HTMLElement {
     /** set global properties */
     this.veroviourl = this.getAttribute('verovio-url') || "https://www.verovio.org/javascript/5.3.2/verovio-toolkit-wasm.js";    
     this.options = this.getAttribute("verovio-options") || {
-      breaks: "auto",
+      breaks: this.getAttribute('break-mode') || "auto",
       scale: 20,
       spacingStaff: 7,
       pageHeight: 4500,
@@ -94,7 +94,7 @@ class EdiromVerovioRenderer extends HTMLElement {
    * @returns {Array<string>} The list of observed attributes.
    */
   static get observedAttributes() {
-    return ['zoom', 'height', 'width', 'pagenumber', 'meiurl', 'elementid', 'measurenumber', 'mdivname', "movementid", "pagewidth", "pageheight", "verovio-url", "verovio-options"];
+    return ['zoom', 'height', 'width', 'pagenumber', 'meiurl', 'elementid', 'measurenumber', 'mdivname', "movementid", "pagewidth", "pageheight", "verovio-url", "verovio-options", "break-mode"];
   }
 
   /**
@@ -211,6 +211,13 @@ class EdiromVerovioRenderer extends HTMLElement {
           this.tk?.loadData(this.meiData);
           this.renderSVG();
         }
+        break;
+
+      case 'break-mode':
+        this.options['breaks'] = newPropertyValue;
+        this.tk?.setOptions(this.options);
+        this.tk?.loadData(this.meiData);
+        this.renderSVG();
         break;
     }
 
@@ -406,7 +413,7 @@ class EdiromVerovioRenderer extends HTMLElement {
    */
   renderSVG() {
     this.totalPages = this.tk?.getPageCount();
-    this.pageNumber = (!isNaN(this.pageNumber) && !isNaN(this.totalPages) && this.pageNumber >= 1 && this.pagenumber <= this.totalPages) ? this.pageNumber : 1;
+    this.pageNumber = (!isNaN(this.pageNumber) && !isNaN(this.totalPages) && this.pageNumber >= 1 && this.pageNumber <= this.totalPages) ? this.pageNumber : 1;
 
     let svg = this.tk?.renderToSVG(this.pageNumber);
     this.shadowRoot.getElementById("verovio-svg").innerHTML = svg;
