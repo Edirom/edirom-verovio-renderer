@@ -47,7 +47,7 @@ class EdiromVerovioRenderer extends HTMLElement {
     /** set global properties */
     this.veroviourl = this.getAttribute('verovio-url') || "https://www.verovio.org/javascript/5.3.2/verovio-toolkit-wasm.js";    
     this.options = this.getAttribute("verovio-options") || {
-      breaks: this.getAttribute('break-mode') || "auto",
+      breaks: this.getAttribute('breakmode') || "auto",
       scale: 20,
       spacingStaff: 7,
       pageHeight: 4500,
@@ -94,7 +94,7 @@ class EdiromVerovioRenderer extends HTMLElement {
    * @returns {Array<string>} The list of observed attributes.
    */
   static get observedAttributes() {
-    return ['zoom', 'height', 'width', 'pagenumber', 'meiurl', 'elementid', 'measurenumber', 'mdivname', "movementid", "pagewidth", "pageheight", "verovio-url", "verovio-options", "break-mode"];
+    return ['zoom', 'height', 'width', 'pagenumber', 'meiurl', 'elementid', 'measurenumber', 'mdivname', "movementid", "pagewidth", "pageheight", "verovio-url", "verovio-options", "breakmode"];
   }
 
   /**
@@ -213,11 +213,25 @@ class EdiromVerovioRenderer extends HTMLElement {
         }
         break;
 
-      case 'break-mode':
+      case 'breakmode':
         this.options['breaks'] = newPropertyValue;
         this.tk?.setOptions(this.options);
         this.tk?.loadData(this.meiData);
         this.renderSVG();
+        break;
+
+      case 'verovio-options':
+        try {
+          const newOptions = typeof newPropertyValue === 'string' 
+            ? JSON.parse(newPropertyValue) 
+            : newPropertyValue;
+          this.options = { ...this.options, ...newOptions };
+          this.tk?.setOptions(this.options);
+          this.tk?.loadData(this.meiData);
+          this.renderSVG();
+        } catch (e) {
+          console.error('Invalid verovio-options format:', e);
+        }
         break;
     }
 
