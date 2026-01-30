@@ -11,7 +11,7 @@ A lightweight web component that renders MEI (Music Encoding Initiative) files a
 - **MEI Rendering**: Full support for MEI file rendering via Verovio toolkit
 - **Page Navigation**: Navigate through multi-page scores
 - **Zoom Control**: Adjustable zoom levels (10-100%)
-- **Layout Control**: Control page and system breaks with configurable break modes
+- **Break Control**: Configurable page and system break modes (`auto`, `none`, `line`, `smart`, `encoded`)
 - **Element Navigation**: Jump to specific measures, movements, or XML elements
 - **Multi-Movement Support**: Navigate between movements (mdiv sections)
 - **Customizable Options**: Full access to Verovio rendering options
@@ -68,8 +68,14 @@ renderer.setAttribute('measurenumber', '10');
 // Adjust zoom
 renderer.setAttribute('zoom', '60');
 
-// Change break mode
-renderer.setAttribute('break-mode', 'encoded');
+// Change break mode (auto, none, line, smart, or encoded)
+renderer.setAttribute('breakmode', 'encoded');
+
+// Update Verovio options dynamically
+renderer.setAttribute('verovio-options', JSON.stringify({
+  spacingStaff: 10,
+  breaks: 'smart'
+}));
 ``` 
 
 ## API Reference
@@ -101,9 +107,9 @@ All attributes are strings. The component automatically converts values to the a
 
 | Attribute | Type | Description | Default |
 |-----------|------|-------------|---------|
-| `break-mode` | String | Control page and system breaks: `auto`, `none`, `line`, `smart`, `encoded` | `"auto"` |
+| `breakmode` | String | Control page and system breaks: `auto`, `none`, `line`, `smart`, `encoded` | `"auto"` |
 | `verovio-url` | String | URL to Verovio toolkit JavaScript file | `"https://www.verovio.org/javascript/5.3.2/verovio-toolkit-wasm.js"` |
-| `verovio-options` | Object/String | Verovio toolkit options (JSON string or object) | See below |
+| `verovio-options` | Object/String | Verovio toolkit options (JSON string or object) - dynamically updates rendering | See below |
 | `pagewidth` | Number | Page width in Verovio units (100-100000) | Calculated from `width` and `zoom` |
 | `pageheight` | Number | Page height in Verovio units (100-60000) | Calculated from `height` and `zoom` |
 
@@ -113,6 +119,8 @@ All attributes are strings. The component automatically converts values to the a
 - `line` - Text-wrap style line breaks without forced page breaks
 - `smart` - Intelligent break placement based on musical structure and phrases
 - `encoded` - Respects explicit `<pb/>` (page break) and `<sb/>` (system break) markers in the MEI file
+
+**Note:** The `breakmode` attribute directly controls Verovio's `breaks` option. You can also set it via `verovio-options`, but using the dedicated `breakmode` attribute is recommended for clarity.
 
 #### Default Verovio Options
 
