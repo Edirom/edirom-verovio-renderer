@@ -165,6 +165,9 @@ class EdiromVerovioRenderer extends HTMLElement {
         break;
 
       case 'height':
+        this[property] = parseInt(newPropertyValue);
+        this.updatePageDimensions();
+        break;
       case 'width':
         this[property] = parseInt(newPropertyValue);
         this.updatePageDimensions();
@@ -362,15 +365,19 @@ class EdiromVerovioRenderer extends HTMLElement {
 	  var context = this;
 	  var later = function() {
 		  timeout = null;
-      context.pageHeight = (context.height != null ? parseInt(context.height.toString().replaceAll("px", "")) * 100 / context.zoom : context.verovioElement?.clientHeight);
-      context.pageWidth = (context.width != null ? parseInt(context.width.toString().replaceAll("px", "")) * 100 / context.zoom : context.verovioElement?.clientWidth);
+      
+      // Only use explicit height/width if set to prevent recursive dimension changes on responsive screens
+      if (context.height != null && context.width != null) {
+        context.pageHeight = parseInt(context.height.toString().replaceAll("px", "")) * 100 / context.zoom;
+        context.pageWidth = parseInt(context.width.toString().replaceAll("px", "")) * 100 / context.zoom;
 
-      context.options['pageHeight'] = parseInt(context.pageHeight);
-      context.options['pageWidth'] = parseInt(context.pageWidth);
-      context.tk?.setOptions(context.options);
+        context.options['pageHeight'] = parseInt(context.pageHeight);
+        context.options['pageWidth'] = parseInt(context.pageWidth);
+        context.tk?.setOptions(context.options);
 
-      context.tk?.loadData(context.meiData);
-      context.renderSVG();
+        context.tk?.loadData(context.meiData);
+        context.renderSVG();
+      }
 	  };
 
 	  clearTimeout(timeout);
