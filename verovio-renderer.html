@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verovio Renderer Demo</title>
+  <script src="verovio-renderer-component2.js"></script>
+  <script src="verovio-audio-rendred.js"></script>
+  <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>  
+  <link href="verovio-css.css" rel="stylesheet" type="text/css" />
+
+  <!-- A JavaScript MIDI player -->
+</head>
+<body>
+  <h1>Verovio Renderer Demo</h1>
+
+   <verovio-player id="verovioPlayer"></verovio-player>
+    
+</body>
+</html>
+
+
+<script>
+  var startWidth = window.innerWidth || document.documentElement.clientWidth;
+  var startHeight = window.innerHeight || document.documentElement.clientHeight;
+  setVerovioPlayerSize(startWidth, startHeight);
+
+  // Listen for window resize events and change the pagewidth attribute of the verovio-player element
+  var resizeTimeout;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(function () {
+      var viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+      var viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+      // Set the pagewidth attribute based on the viewport width
+      setVerovioPlayerSize(viewportWidth, viewportHeight);
+    }, 300); // Adjust the delay (in milliseconds) as needed
+  });
+
+  function setVerovioPlayerSize(width, height) {
+    var verovioPlayer = document.getElementById('verovioPlayer');
+    verovioPlayer.setAttribute('pagewidth', width);
+    verovioPlayer.setAttribute('pageheight', height);
+  }
+
+</script>

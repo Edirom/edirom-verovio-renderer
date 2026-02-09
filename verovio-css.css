@@ -1,0 +1,25 @@
+g.note.playing {
+    color: crimson
+        
+        
+}
+
+@keyframes pulse {
+  0% {
+      fill: orange;
+  }
+
+  50% {
+      fill: brown;
+  }
+
+  100% {
+      fill: orange;
+  }
+}
+
+g.note.playing {
+  animation-name: pulse;
+  animation-duration: 1.0s;
+  animation-iteration-count: infinite;
+}
