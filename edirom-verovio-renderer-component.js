@@ -45,7 +45,7 @@ class EdiromVerovioRenderer extends HTMLElement {
     this.totalPages = 0;
 
     /** set global properties */
-    this.veroviourl = this.getAttribute('verovio-url') || "https://www.verovio.org/javascript/5.3.2/verovio-toolkit-wasm.js";    
+    this.veroviourl = this.getAttribute('verovio-url') || "./verovio-toolkit-wasm.js";
     this.options = this.getAttribute("verovio-options") || {
       breaks: "auto",
       scale: 20,
