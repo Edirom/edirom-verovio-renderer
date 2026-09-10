@@ -105,7 +105,7 @@ All attributes are strings. The component automatically converts values to the a
 | Attribute | Type | Description | Default |
 |-----------|------|-------------|---------|
 | `verovio-breaks` | String | Control page and system breaks: `auto`, `none`, `line`, `smart`, `encoded` | `"auto"` |
-| `verovio-url` | String | URL to Verovio toolkit JavaScript file | `"https://www.verovio.org/javascript/5.3.2/verovio-toolkit-wasm.js"` |
+| `verovio-url` | String | URL to Verovio toolkit JavaScript file | `"./verovio-toolkit-wasm.js"` |
 | `verovio-options` | Object/String | Verovio toolkit options (JSON string or object) - dynamically updates rendering | See below |
 | `pagewidth` | Number | Page width in Verovio units (100-100000) | Calculated from `width` and `zoom` |
 | `pageheight` | Number | Page height in Verovio units (100-60000) | Calculated from `height` and `zoom` |
