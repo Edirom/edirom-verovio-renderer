@@ -11,6 +11,7 @@ A lightweight web component that renders MEI (Music Encoding Initiative) files a
 - **MEI Rendering**: Full support for MEI file rendering via Verovio toolkit
 - **Page Navigation**: Navigate through multi-page scores
 - **Zoom Control**: Adjustable zoom levels (10-100%)
+- **Break Control**: Configurable page and system break modes (`auto`, `none`, `line`, `smart`, `encoded`)
 - **Element Navigation**: Jump to specific measures, movements, or XML elements
 - **Multi-Movement Support**: Navigate between movements (mdiv sections)
 - **Customizable Options**: Full access to Verovio rendering options
@@ -43,9 +44,7 @@ cd edirom-verovio-renderer
 <body>
     <edirom-verovio-renderer
         meiurl="https://www.verovio.org/examples/downloads/Schubert_Lindenbaum.mei"
-        zoom="40"
-        width="800px"
-        height="1000px">
+        zoom="40">
     </edirom-verovio-renderer>
 </body>
 </html>
@@ -66,6 +65,15 @@ renderer.setAttribute('measurenumber', '10');
 
 // Adjust zoom
 renderer.setAttribute('zoom', '60');
+
+// Change break mode (auto, none, line, smart, or encoded)
+renderer.setAttribute('verovio-breaks', 'encoded');
+
+// Update Verovio options dynamically
+renderer.setAttribute('verovio-options', JSON.stringify({
+  spacingStaff: 10,
+  breaks: 'smart'
+}));
 ``` 
 
 ## API Reference
@@ -79,8 +87,7 @@ All attributes are strings. The component automatically converts values to the a
 | Attribute | Type | Description | Default |
 |-----------|------|-------------|---------|
 | `meiurl` | String | URL to the MEI file to render | `"https://www.verovio.org/examples/downloads/Schubert_Lindenbaum.mei"` |
-| `width` | String | Component width (with units, e.g., "800px") | `"200px"` |
-| `height` | String | Component height (with units, e.g., "1000px") | `"700px"` |
+
 | `zoom` | Number | Zoom level / Verovio scale (10-100) | `20` |
 | `pagenumber` | Number | Current page to display | `1` |
 
@@ -97,16 +104,26 @@ All attributes are strings. The component automatically converts values to the a
 
 | Attribute | Type | Description | Default |
 |-----------|------|-------------|---------|
+| `verovio-breaks` | String | Control page and system breaks: `auto`, `none`, `line`, `smart`, `encoded` | `"auto"` |
 | `verovio-url` | String | URL to Verovio toolkit JavaScript file | `"./verovio-toolkit-wasm.js"` |
-| `verovio-options` | Object/String | Verovio toolkit options (JSON string or object) | See below |
+| `verovio-options` | Object/String | Verovio toolkit options (JSON string or object) - dynamically updates rendering | See below |
 | `pagewidth` | Number | Page width in Verovio units (100-100000) | Calculated from `width` and `zoom` |
 | `pageheight` | Number | Page height in Verovio units (100-60000) | Calculated from `height` and `zoom` |
+
+**Break Mode Reference:**
+- `auto` - Default mode. Respects page dimensions and automatically calculates optimal page/system breaks
+- `none` - Single continuous system; page width adjusts automatically to fit all content
+- `line` - Text-wrap style line breaks without forced page breaks
+- `smart` - Intelligent break placement based on musical structure and phrases
+- `encoded` - Respects explicit `<pb/>` (page break) and `<sb/>` (system break) markers in the MEI file
+
+**Note:** The `verovio-breaks` attribute directly controls Verovio's `breaks` option. You can also set it via `verovio-options`, but using the dedicated `verovio-breaks` attribute is recommended for clarity.
 
 #### Default Verovio Options
 
 ```javascript
 {
-  breaks: "auto",
+  breaks: "auto",           // Controlled via verovio-breaks attribute
   scale: 20,
   spacingStaff: 7,
   pageHeight: 4500,
@@ -165,7 +182,7 @@ renderer.gotoMdiv('Allegro');
 ```bash
 # Clone the repository
 git clone https://github.com/Edirom/edirom-verovio-renderer.git
-cd edirom-verovio-renderer
+cd edirom-verovio-renderer 
 
 # Start a local server (Python example)
 python3 -m http.server 8080

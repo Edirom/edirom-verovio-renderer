@@ -47,20 +47,16 @@ class EdiromVerovioRenderer extends HTMLElement {
     /** set global properties */
     this.veroviourl = this.getAttribute('verovio-url') || "./verovio-toolkit-wasm.js";
     this.options = this.getAttribute("verovio-options") || {
-      breaks: "auto",
-      scale: 20,
-      spacingStaff: 7,
-      pageHeight: 4500,
-      pageWidth: 4500,
-      footer: "none",
-      header: "none",
     }; 
 
     this.meiurl = this.getAttribute('meiurl') || "";
     this.zoom = this.getAttribute("zoom") || 20;
     this.pageNumber = this.getAttribute("pagenumber") || 1;
 
-    this.shadowRoot.innerHTML += `<div id="verovio-svg"></div>`;
+    this.shadowRoot.innerHTML += `
+     
+      <div id="verovio-svg"></div>
+    `;
   }
 
   
@@ -94,7 +90,7 @@ class EdiromVerovioRenderer extends HTMLElement {
    * @returns {Array<string>} The list of observed attributes.
    */
   static get observedAttributes() {
-    return ['zoom', 'height', 'width', 'pagenumber', 'meiurl', 'elementid', 'measurenumber', 'mdivname', "movementid", "pagewidth", "pageheight", "verovio-url", "verovio-options"];
+    return ['zoom', 'pagenumber', 'meiurl', 'elementid', 'measurenumber', 'mdivname', "movementid", "pagewidth", "pageheight", "verovio-url", "verovio-options", "verovio-breaks"];
   }
 
   /**
@@ -164,12 +160,6 @@ class EdiromVerovioRenderer extends HTMLElement {
         this.renderSVG();
         break;
 
-      case 'height':
-      case 'width':
-        this[property] = parseInt(newPropertyValue);
-        this.updatePageDimensions();
-        break;
-
       case 'meiurl':
         this.meiurl = newPropertyValue;
         this.fetchAndRenderMEI();
@@ -210,6 +200,27 @@ class EdiromVerovioRenderer extends HTMLElement {
           this.tk?.setOptions(this.options);
           this.tk?.loadData(this.meiData);
           this.renderSVG();
+        }
+        break;
+
+      case 'verovio-breaks':
+        this.options['breaks'] = newPropertyValue;
+        this.tk?.setOptions(this.options);
+        this.tk?.loadData(this.meiData);
+        this.renderSVG();
+        break;
+
+      case 'verovio-options':
+        try {
+          const newOptions = typeof newPropertyValue === 'string' 
+            ? JSON.parse(newPropertyValue) 
+            : newPropertyValue;
+          this.options = { ...this.options, ...newOptions };
+          this.tk?.setOptions(this.options);
+          this.tk?.loadData(this.meiData);
+          this.renderSVG();
+        } catch (e) {
+          console.error('Invalid verovio-options format:', e);
         }
         break;
     }
@@ -341,15 +352,18 @@ class EdiromVerovioRenderer extends HTMLElement {
 	  var context = this;
 	  var later = function() {
 		  timeout = null;
-      context.pageHeight = (context.height != null ? parseInt(context.height.toString().replaceAll("px", "")) * 100 / context.zoom : context.verovioElement?.clientHeight);
-      context.pageWidth = (context.width != null ? parseInt(context.width.toString().replaceAll("px", "")) * 100 / context.zoom : context.verovioElement?.clientWidth);
+      
+      if (context.height != null && context.width != null) {
+        context.pageHeight = parseInt(context.height.toString().replaceAll("px", "")) * 100 / context.zoom;
+        context.pageWidth = parseInt(context.width.toString().replaceAll("px", "")) * 100 / context.zoom;
 
-      context.options['pageHeight'] = parseInt(context.pageHeight);
-      context.options['pageWidth'] = parseInt(context.pageWidth);
-      context.tk?.setOptions(context.options);
+        context.options['pageHeight'] = parseInt(context.pageHeight);
+        context.options['pageWidth'] = parseInt(context.pageWidth);
+        context.tk?.setOptions(context.options);
 
-      context.tk?.loadData(context.meiData);
-      context.renderSVG();
+        context.tk?.loadData(context.meiData);
+        context.renderSVG();
+      }
 	  };
 
 	  clearTimeout(timeout);
@@ -406,11 +420,40 @@ class EdiromVerovioRenderer extends HTMLElement {
    */
   renderSVG() {
     this.totalPages = this.tk?.getPageCount();
-    this.pageNumber = (!isNaN(this.pageNumber) && !isNaN(this.totalPages) && this.pageNumber >= 1 && this.pagenumber <= this.totalPages) ? this.pageNumber : 1;
+    this.pageNumber = (!isNaN(this.pageNumber) && !isNaN(this.totalPages) && this.pageNumber >= 1 && this.pageNumber <= this.totalPages) ? this.pageNumber : 1;
 
     let svg = this.tk?.renderToSVG(this.pageNumber);
     this.shadowRoot.getElementById("verovio-svg").innerHTML = svg;
+    const svgElement = this.shadowRoot.querySelector("svg");
+    
+    // Calculate SVG dimensions based on viewBox
+    const viewBox = svgElement.getAttribute('viewBox');
+    
+    if (viewBox) {
+      // Parse viewBox string: "minX minY width height"
+      const viewBoxParts = viewBox.split(' ').map(Number);
+      const vbWidth = viewBoxParts[2];
+      const vbHeight = viewBoxParts[3];
+      
+      if (!isNaN(vbWidth) && !isNaN(vbHeight) && vbWidth > 0 && vbHeight > 0) {
+        // Calculate aspect ratio
+        const aspectRatio = vbHeight / vbWidth;
+        
 
+        const pxPerVerovioUnit = this.verovioWidth > 0 ? 420 / this.verovioWidth : 0.02;
+        
+        // Calculate dimensions in pixels based on viewBox and reference width
+        const width = Math.round(vbWidth * pxPerVerovioUnit);
+        const height = Math.round(width * aspectRatio);
+        
+        // Set width and height in pixels
+        svgElement.setAttribute('width', width + 'px');
+        svgElement.setAttribute('height', height + 'px');
+        
+        console.log('ViewBox:', viewBox, '| Calculated SVG: ', width + 'px x ' + height + 'px');
+      }
+    }
+    
     this.dispatchEvent(new CustomEvent('page-info-update', {
       detail: {
         pageNumber: this.pageNumber,
